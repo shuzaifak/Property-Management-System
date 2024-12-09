@@ -122,3 +122,15 @@ exports.deleteProperty = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getOwnerProperties = async (req, res) => {
+  try {
+    // Fetch properties for the currently logged-in owner
+    const properties = await Property.find({ ownerId: req.user._id })
+      .populate('ownerId', 'name email');
+    
+    res.json(properties);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

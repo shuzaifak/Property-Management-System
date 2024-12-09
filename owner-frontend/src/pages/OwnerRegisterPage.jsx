@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -10,12 +10,11 @@ import {
   ThemeProvider,
   createTheme
 } from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { AuthContext } from '../context/AuthContext';
-import api from '../utils/api';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
-// Custom theme
+// Custom theme (reusing the theme from login page)
 const theme = createTheme({
   palette: {
     primary: {
@@ -48,25 +47,44 @@ const theme = createTheme({
   },
 });
 
-const OwnerLoginPage = () => {
-  const { login } = useContext(AuthContext);
+const OwnerRegisterPage = () => {
   const navigate = useNavigate();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
+    // Basic validation
+    if (!name || !email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
     try {
-      const res = await api.post('/users/login', { email, password });
-      const { user, token } = res.data;
-      if (user.role !== 'owner') {
-        setError('Not authorized as owner');
-        return;
-      }
-      login(user, token);
-      navigate('/');
+      const { data } = await api.post('/users/register', { 
+        name, 
+        email, 
+        password, 
+        role: 'owner' // Hardcoded role as owner
+      });
+      
+      // Clear any previous errors
+      setError('');
+      
+      // Set success message with user info from response
+      setSuccess(`Registration successful for ${data.user.name}. Redirecting to login...`);
+      
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      // More detailed error handling
+      const errorMsg = err.response?.data?.message || 'Registration failed';
+      setError(errorMsg);
+      setSuccess('');
     }
   };
 
@@ -102,7 +120,7 @@ const OwnerLoginPage = () => {
                 width: '100%',
               }}
             >
-              <LockOutlinedIcon 
+              <PersonAddOutlinedIcon 
                 sx={{ 
                   fontSize: 60, 
                   color: theme.palette.primary.main,
@@ -117,7 +135,7 @@ const OwnerLoginPage = () => {
                   fontWeight: 600,
                 }}
               >
-                Owner Login
+                Owner Registration
               </Typography>
 
               {error && (
@@ -132,7 +150,28 @@ const OwnerLoginPage = () => {
                 </Alert>
               )}
 
+              {success && (
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    width: '100%', 
+                    marginBottom: 2,
+                  }}
+                >
+                  {success}
+                </Alert>
+              )}
+
               <Box component="form" sx={{ width: '100%' }}>
+                <TextField 
+                  label="Full Name" 
+                  variant="outlined" 
+                  fullWidth 
+                  margin="normal"
+                  value={name} 
+                  onChange={e => setName(e.target.value)} 
+                  required
+                />
                 <TextField 
                   label="Email" 
                   variant="outlined" 
@@ -140,6 +179,8 @@ const OwnerLoginPage = () => {
                   margin="normal"
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
+                  required
+                  type="email"
                 />
                 <TextField 
                   label="Password" 
@@ -149,6 +190,7 @@ const OwnerLoginPage = () => {
                   margin="normal"
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
+                  required
                 />
                 <Button 
                   variant="contained" 
@@ -161,9 +203,9 @@ const OwnerLoginPage = () => {
                     textTransform: 'none',
                     fontWeight: 600,
                   }}
-                  onClick={handleLogin}
+                  onClick={handleRegister}
                 >
-                  Sign In
+                  Register
                 </Button>
                 <Button 
                   variant="outlined" 
@@ -175,9 +217,9 @@ const OwnerLoginPage = () => {
                     borderRadius: 2,
                     textTransform: 'none',
                   }}
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/login')}
                 >
-                  Register
+                  Back to Login
                 </Button>
               </Box>
             </Box>
@@ -188,4 +230,4 @@ const OwnerLoginPage = () => {
   );
 };
 
-export default OwnerLoginPage;
+export default OwnerRegisterPage;
