@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import OwnerLoginPage from './pages/OwnerLoginPage';
+import OwnerRegisterPage from './pages/OwnerRegisterPage';
 import OwnerDashboardPage from './pages/OwnerDashboardPage';
 import PropertiesPage from './pages/PropertiesPage';
 import AddPropertyPage from './pages/AddPropertyPage';
@@ -13,6 +14,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<OwnerLoginPage />} />
+      <Route path="/register" element={<OwnerRegisterPage />} />
       <Route path="/" element={isAuthenticated ? <OwnerDashboardPage /> : <Navigate to="/login" />} />
       <Route path="/properties" element={isAuthenticated ? <PropertiesPage /> : <Navigate to="/login" />} />
       <Route path="/add-property" element={isAuthenticated ? <AddPropertyPage /> : <Navigate to="/login" />} />

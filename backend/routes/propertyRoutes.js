@@ -4,9 +4,10 @@ const router = express.Router();
 const { 
   createProperty, 
   getProperties, 
+  getOwnerProperties, 
   updateProperty, 
   deleteProperty 
-} = require('../controllers/propertyController');
+}  = require('../controllers/propertyController');
 const { protect, requireRole } = require('../middlewares/authMiddleware');
 const multer = require('multer');
 const path = require('path');
@@ -41,5 +42,6 @@ router.post('/', protect, requireRole(['admin', 'owner']), upload.array('images'
 router.get('/', protect, requireRole(['admin', 'owner', 'tenant']), getProperties);
 router.put('/:id', protect, requireRole(['admin', 'owner']), upload.array('images', 4), updateProperty);
 router.delete('/:id', protect, requireRole(['admin', 'owner']), deleteProperty);
+router.get('/owner', protect, requireRole(['owner']), getOwnerProperties);
 
 module.exports = router;
