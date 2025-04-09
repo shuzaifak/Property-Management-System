@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { register, login, forgotPassword, getAllUsers, uploadAvatar, getMe } = require('../controllers/userController');
+const { register, login, forgotPassword, getAllUsers, uploadAvatar, getMe, resetPassword} = require('../controllers/userController');
 const { protect, requireRole } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
@@ -10,6 +10,8 @@ const upload = require('../middlewares/uploadMiddleware');
 router.post('/register', register);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
+
 
 // Protected routes
 router.get('/all', protect, requireRole(['admin']), getAllUsers);

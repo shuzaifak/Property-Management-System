@@ -99,7 +99,7 @@ const PropertyTable = ({ properties, setProperties }) => {
               <TableCell>{property.title}</TableCell>
               <TableCell>{property.address}</TableCell>
               <TableCell align="right">
-                ${property.price?.toLocaleString() || 'N/A'}
+                Rs.{property.price?.toLocaleString() || 'N/A'}
               </TableCell>
               <TableCell align="center">
                 <Tooltip title="Edit Property">

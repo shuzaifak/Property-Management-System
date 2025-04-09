@@ -7,8 +7,9 @@ const propertySchema = new mongoose.Schema({
   address: { type: String, required: true },
   price: { type: Number, required: true },
   description: String,
-  images: [String], 
+  images: [String],
   tenants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  available: { type: Boolean, default: true }  // Add this field to track availability
 }, { timestamps: true });
 
 module.exports = mongoose.model('Property', propertySchema);

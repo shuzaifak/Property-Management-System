@@ -7,6 +7,7 @@ import PropertyList from '../components/PropertyList';
 import PaymentForm from '../components/PaymentForm';
 import PaymentHistory from '../components/PaymentHistory';
 import NotFound from './NotFound';
+import LeaseAgreementsPage from './LeaseAgreementsPage';
 
 const drawerWidth = 280;
 
@@ -36,6 +37,7 @@ const Dashboard = () => {
           <Route path="/" element={<PropertyList />} />
           <Route path="pay-rent" element={<PaymentForm />} />
           <Route path="payment-history" element={<PaymentHistory />} />
+          <Route path="/dashboard/lease-agreements" element={<LeaseAgreementsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Box>
