@@ -19,6 +19,7 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import HistoryIcon from '@mui/icons-material/History';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DocumentIcon from '@mui/icons-material/Description'; // New icon for Lease Agreements
 import { useState } from 'react';
 
 const drawerWidth = 280;
@@ -90,8 +91,13 @@ const Sidebar = () => {
       icon: <HistoryIcon />,
       path: 'payment-history',
     },
+    {
+      text: 'Lease Agreements', // New menu item
+      icon: <DocumentIcon />,
+      path: 'lease-agreements',
+      condition: hasActiveLease, // Only show if tenant has an active lease
+    },
   ];
-
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -153,7 +159,6 @@ const Sidebar = () => {
       </Box>
     </Box>
   );
-
   return (
     <>
       <Hidden smUp>
