@@ -5,52 +5,40 @@ import {
   CardContent, 
   Grid, 
   Box, 
-  Stack 
+  Stack,
+  CircularProgress
 } from '@mui/material';
 import { 
   Home as HomeIcon, 
   AttachMoney as MoneyIcon, 
+  People as PeopleIcon
 } from '@mui/icons-material';
 import api from '../../utils/api';
 
 const StatCard = ({ icon, title, value, color }) => (
-  <Card 
-    sx={{ 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      justifyContent: 'space-between',
-      background: `linear-gradient(135deg, ${color}80, ${color}20)`,
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    }}
-  >
+  <Card className="glass-card" sx={{ height: '100%', border: 'none' }}>
     <CardContent>
-      <Stack 
-        direction="row" 
-        alignItems="center" 
-        justifyContent="space-between" 
-        spacing={2}
-      >
+      <Stack direction="row" alignItems="center" spacing={2} mb={1}>
         <Box 
           sx={{ 
-            color: color, 
-            fontSize: 44, 
-            opacity: 0.7,
+            p: 1, 
+            borderRadius: 2, 
+            bgcolor: `${color}15`, 
+            color: color,
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
         >
           {icon}
         </Box>
-        <Stack alignItems="end">
-          <Typography variant="subtitle2" color="text.secondary">
-            {title}
-          </Typography>
-          <Typography variant="h4" fontWeight="bold">
-            {value}
-          </Typography>
-        </Stack>
+        <Typography variant="subtitle1" color="textSecondary" sx={{ fontWeight: 500 }}>
+          {title}
+        </Typography>
       </Stack>
+      <Typography variant="h4" sx={{ fontWeight: 800, background: 'linear-gradient(45deg, #f1f5f9, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        {value}
+      </Typography>
     </CardContent>
   </Card>
 );
@@ -61,45 +49,48 @@ const OwnerDashboard = () => {
     totalValue: 0,
     occupiedProperties: 0
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        setLoading(true);
         const res = await api.get('/properties/owner');
         const properties = res.data;
         
         const totalValue = properties.reduce((sum, property) => 
           sum + (property.price || 0), 0);
         
-        const occupiedProperties = properties.filter(p => p.isOccupied).length;
+        const occupiedCount = properties.filter(p => !p.available).length;
 
         setStats({
           propertyCount: properties.length,
           totalValue: totalValue.toLocaleString(),
-          occupiedProperties
+          occupiedProperties: occupiedCount
         });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchStats();
   }, []);
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
+        <CircularProgress sx={{ color: '#3b82f6' }} />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ flexGrow: 1, padding: 3 }}>
-      <Typography 
-        variant="h4" 
-        gutterBottom 
-        sx={{ 
-          marginBottom: 3,
-          fontWeight: 600,
-          background: 'linear-gradient(45deg, #3f51b5, #2196f3)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}
-      >
-        Owner Dashboard
-      </Typography>
+    <Box sx={{ flexGrow: 1 }}>
+      <Box mb={4}>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Dashboard Overview</Typography>
+        <Typography variant="body1" color="textSecondary">Welcome back to your property management console.</Typography>
+      </Box>
 
       <Grid container spacing={3}>
         <Grid item xs={12} sm={4}>
@@ -107,15 +98,23 @@ const OwnerDashboard = () => {
             icon={<HomeIcon />} 
             title="Total Properties" 
             value={stats.propertyCount} 
-            color="#3f51b5"
+            color="#3b82f6"
+          />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <StatCard 
+            icon={<PeopleIcon />} 
+            title="Occupied Units" 
+            value={stats.occupiedProperties} 
+            color="#10b981"
           />
         </Grid>
         <Grid item xs={12} sm={4}>
           <StatCard 
             icon={<MoneyIcon />} 
-            title="Total Property Value" 
+            title="Monthly Revenue" 
             value={`Rs.${stats.totalValue}`} 
-            color="#ff9800"
+            color="#f59e0b"
           />
         </Grid>
       </Grid>

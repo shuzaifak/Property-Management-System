@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Typography } from '@mui/material';
+import { Grid, Typography, Box } from '@mui/material';
 import StatsCard from './StatsCard';
 import ChartCard from './ChartCard';
 import api from '../../utils/api';
@@ -17,7 +17,10 @@ const Dashboard = () => {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom>Dashboard</Typography>
+      <Box mb={4}>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Dashboard Overview</Typography>
+        <Typography variant="body1" color="textSecondary">Welcome back to the admin portal.</Typography>
+      </Box>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={4}>
           <StatsCard title="Properties" value={stats.propertyCount} />

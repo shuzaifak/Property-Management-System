@@ -4,10 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const User = require('../models/User');
 const Lease = require('../models/Lease');
+const Payment = require('../models/Payment');
 const { sendEmail } = require('../utils/emailService');
 const mongoose = require('mongoose');
-
-
+const crypto = require('crypto');
 
 exports.createProperty = async (req, res) => {
   try {
@@ -32,22 +32,25 @@ exports.createProperty = async (req, res) => {
       sendEmail(
         tenant.email, 
         'New Property Added to Property Sync', 
-        `Dear ${tenant.name},
+        `
+          <h3>New Property Listing</h3>
+          <p>Dear ${tenant.name},</p>
+          <p>A stunning new property has just been added to the Property Sync collection that matches your interest.</p>
+          
+          <div class="info-box">
+            <h4>Property Details:</h4>
+            <ul>
+              <li><strong>Title:</strong> ${title}</li>
+              <li><strong>Address:</strong> ${address}</li>
+              <li><strong>Monthly Rent:</strong> $${price}</li>
+            </ul>
+          </div>
 
-A new property has been added to Property Sync:
-
-Property Details:
-- Title: ${title}
-- Address: ${address}
-- Monthly Rent: $${price}
-
-Description:
-${description}
-
-Check out the available properties in your tenant portal.
-
-Best regards,
-Property Sync Management`
+          <p><strong>Description:</strong><br/>${description}</p>
+          
+          <p>Sign in to your portal to view photos and contact the owner.</p>
+          <a href="${process.env.FRONTEND_URL}/dashboard" class="button">View Listing</a>
+        `
       )
     );
 
@@ -132,36 +135,27 @@ exports.addTenantToProperty = async (req, res) => {
     await sendEmail(
       tenant.email, 
       'New Property Lease Assigned', 
-      `Dear ${tenant.name},
-  
-  You have been assigned to a new property at ${property.address}.
-  
-  Please review the following terms and conditions:
-  
-  1. Lease Term and Rent
-     - Monthly rent payment is due on the 1st of each month
-     - Late payments will incur a 5% fee after the 5th
-  
-  2. Security Deposit
-     - Equal to one month's rent
-     - Returned within 30 days of move-out, less damages
-  
-  3. Maintenance
-     - Report all maintenance issues promptly
-     - Emergency repairs should be reported immediately
-  
-  4. Property Use
-     - Residential use only
-     - No subletting without permission
-  
-  5. Utilities
-     - Tenant responsible for all utilities
-     - Must maintain active status
-  
-  Please sign into your tenant portal to complete the process.
-  
-  Best regards,
-  Property Sync Management`
+      `
+        <h3>Welcome to Your New Home!</h3>
+        <p>Dear ${tenant.name},</p>
+        <p>Congratulations! You have been successfully assigned to the property at <strong>${property.address}</strong>.</p>
+        
+        <div class="info-box">
+          <h4>Lease Summary & Terms:</h4>
+          <ul>
+            <li><strong>Rent Due:</strong> 1st of each month</li>
+            <li><strong>Late Fee:</strong> 5% after the 5th</li>
+            <li><strong>Security Deposit:</strong> Equal to one month's rent</li>
+            <li><strong>Utilities:</strong> Tenant responsibility</li>
+          </ul>
+        </div>
+
+        <p>Please log in to your tenant portal to review and download your full lease agreement.</p>
+        <a href="${process.env.FRONTEND_URL}/dashboard" class="button">Go to Dashboard</a>
+        
+        <hr />
+        <p><small>Emergency repairs should be reported immediately through the portal maintenance system.</small></p>
+      `
   );
 
     res.status(201).json({ 
@@ -180,21 +174,24 @@ exports.getOwnerProperties = async (req, res) => {
   try {
     const properties = await Property.find({ ownerId: req.user._id });
 
-    // Check for active leases to determine availability
+    // Check for active leases to determine availability and fetch tenant details
     const propertiesWithStatus = await Promise.all(properties.map(async (property) => {
       const activeLease = await Lease.findOne({
         property: property._id,
         status: 'active'
-      });
+      }).populate('tenant', 'name email role');
 
+      // Convert to plain object to add custom fields
+      const propertyObj = property.toObject();
+      
       // If there is an active lease, the property is occupied
-      property.available = !activeLease;
+      propertyObj.available = !activeLease;
+      propertyObj.activeLease = activeLease;
 
-      // Return the updated property
-      return property;
+      return propertyObj;
     }));
 
-    res.json(propertiesWithStatus);  // Send updated properties with availability status
+    res.json(propertiesWithStatus);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -202,19 +199,29 @@ exports.getOwnerProperties = async (req, res) => {
 
 exports.getProperties = async (req, res) => {
   try {
-    // Check if there's a specific ID query
     const { id } = req.query;
     
     let properties;
     if (id) {
-      // If ID is provided, find specific property
       properties = await Property.find({ _id: id }).populate('ownerId', 'name email');
     } else {
-      // Otherwise, get all properties
       properties = await Property.find({}).populate('ownerId', 'name email');
     }
+
+    // Enhance properties with active lease and tenant info
+    const enrichedProperties = await Promise.all(properties.map(async (p) => {
+      const activeLease = await Lease.findOne({
+        property: p._id,
+        status: 'active'
+      }).populate('tenant', 'name email');
+
+      const pObj = p.toObject();
+      pObj.available = !activeLease;
+      pObj.activeLease = activeLease;
+      return pObj;
+    }));
     
-    res.json(properties);
+    res.json(enrichedProperties);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -271,79 +278,81 @@ exports.updateProperty = async (req, res) => {
 };
 
 exports.deleteProperty = async (req, res) => {
-  const session = await mongoose.startSession(); // Assuming you're using mongoose transactions
+  const session = await mongoose.startSession();
   try {
     const { id } = req.params;
-    
-    // Start a transaction
     await session.startTransaction();
 
-    // Find property to get images before deletion
-    const property = await Property.findOne({ _id: id, ownerId: req.user._id }).session(session);
-    
-    if (!property) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: 'Property not found or not authorized.' });
+    let query = { _id: id };
+    if (req.user.role !== 'admin') {
+      query.ownerId = req.user._id;
     }
 
-    // Delete associated image files
-    property.images.forEach(imagePath => {
+    const property = await Property.findOne(query).session(session);
+    if (!property) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Property not found or you are not authorized.' });
+    }
+
+    // Prepare file deletions (async)
+    const fileDeletions = property.images.map(imagePath => {
       const fullPath = path.join(__dirname, '../public', imagePath);
-      if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
-      }
+      return fs.promises.unlink(fullPath).catch(() => {}); // Ignore errors if file not found
     });
 
-    // Find and terminate any active leases for this property
-    await Lease.updateMany(
-      { property: id, status: 'active' }, 
-      { 
-        status: 'terminated', 
-        endDate: new Date(), 
-        terminationReason: 'Property deleted by owner' 
-      }
-    ).session(session);
+    // Run DB updates in parallel where possible within the transaction
+    const dbUpdates = [
+      // Terminate active leases
+      Lease.updateMany(
+        { property: id, status: 'active' }, 
+        { 
+          status: 'terminated', 
+          endDate: new Date(), 
+          terminationReason: req.user.role === 'admin' ? 'Property deleted by Admin' : 'Property deleted by owner' 
+        }
+      ).session(session),
 
-    // Update tenant's current lease reference
-    await User.updateMany(
-      { currentLease: { $in: await Lease.find({ property: id }).select('_id') } },
-      { $unset: { currentLease: 1 } }
-    ).session(session);
+      // Remove currentLease reference from users
+      Lease.find({ property: id }).select('_id').session(session).then(leases => {
+        const leaseIds = leases.map(l => l._id);
+        return User.updateMany(
+          { currentLease: { $in: leaseIds } },
+          { $unset: { currentLease: 1 } }
+        ).session(session);
+      }),
 
-    // Delete property from database
-    await Property.findOneAndDelete({ _id: id, ownerId: req.user._id }).session(session);
+      // Delete property record
+      Property.findOneAndDelete({ _id: id }).session(session)
+    ];
+
+    // Wait for all DB operations and file deletions
+    await Promise.all([...dbUpdates, ...fileDeletions]);
     
-    // Commit the transaction
     await session.commitTransaction();
-    
-    res.json({ message: 'Property and associated leases deleted.' });
+    res.json({ message: 'Property deleted successfully.' });
   } catch (err) {
-    // Abort transaction if there's an error
-    await session.abortTransaction();
+    if (session.inTransaction()) await session.abortTransaction();
     res.status(500).json({ message: err.message });
   } finally {
-    // End the session
     session.endSession();
   }
 };
+
 exports.getOwnerPaymentHistory = async (req, res) => {
   try {
     // Find all properties owned by the current user
     const properties = await Property.find({ ownerId: req.user._id });
-
-    // Get property IDs
     const propertyIds = properties.map(prop => prop._id);
 
-    // Find all active leases for these properties
+    // Find all active leases for these properties to calculate dues
     const activeLeases = await Lease.find({ 
       property: { $in: propertyIds },
       status: 'active'
-    });
+    }).populate('tenant', 'name email').populate('property', 'title address');
 
-    // Get lease IDs
     const leaseIds = activeLeases.map(lease => lease._id);
 
-    // Fetch all payments for these leases with tenant details
+    // Fetch all payments for these leases
     const payments = await Payment.find({ lease: { $in: leaseIds } })
       .populate({
         path: 'lease',
@@ -354,8 +363,82 @@ exports.getOwnerPaymentHistory = async (req, res) => {
       })
       .sort({ date: -1 });
 
-    res.json(payments);
+    // Calculate dues for each active lease
+    const dues = await Promise.all(activeLeases.map(async (lease) => {
+      const leasePayments = await Payment.find({ 
+        lease: lease._id, 
+        status: 'completed' 
+      });
+      
+      const totalPaid = leasePayments.reduce((sum, p) => sum + p.amount, 0);
+
+      // Calculate total expected rent since lease started
+      const startDate = new Date(lease.startDate);
+      const today = new Date();
+      
+      const yearsDiff = today.getFullYear() - startDate.getFullYear();
+      const monthsDiff = today.getMonth() - startDate.getMonth();
+      const totalMonths = (yearsDiff * 12) + monthsDiff + 1; // Including current month
+
+      const totalExpected = (lease.rentAmount || 0) * totalMonths;
+      const outstanding = Math.max(0, totalExpected - totalPaid);
+
+      return {
+        leaseId: lease._id,
+        tenantName: lease.tenant?.name,
+        propertyTitle: lease.property?.title,
+        monthlyRent: lease.rentAmount,
+        totalPaid,
+        totalExpected,
+        outstanding
+      };
+    }));
+
+    res.json({ payments, dues });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.contactOwner = async (req, res) => {
+  try {
+    const { propertyId } = req.body;
+    const property = await Property.findById(propertyId).populate("ownerId", "name email");
+
+    if (!property) {
+      return res.status(404).json({ message: "Property not found." });
+    }
+
+    const tenant = req.user;
+    const owner = property.ownerId;
+
+    if (!owner || !owner.email) {
+      return res.status(400).json({ message: "Owner contact information is missing." });
+    }
+
+    // Send email to owner
+    await sendEmail(
+      owner.email,
+      `New Interest in your property: ${property.title}`,
+      `
+      <h3>New Inquiry Received</h3>
+      <p>Hello <strong>${owner.name}</strong>,</p>
+      <p>A potential tenant has expressed interest in your property <strong>"${property.title}"</strong>.</p>
+      <hr />
+      <h4>Tenant Details:</h4>
+      <ul>
+        <li><strong>Name:</strong> ${tenant.name}</li>
+        <li><strong>Email:</strong> ${tenant.email}</li>
+      </ul>
+      <p>They are viewing your property on the Property Sync portal and would like to learn more or schedule a viewing.</p>
+      <br />
+      <p>Best regards,<br />Property Sync System</p>
+      `
+    );
+
+    res.json({ message: "Inquiry sent successfully to the owner!" });
+  } catch (err) {
+    console.error("Contact owner error:", err);
+    res.status(500).json({ message: "Failed to send inquiry. Please try again later." });
   }
 };

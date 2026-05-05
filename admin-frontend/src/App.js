@@ -5,6 +5,7 @@ import UsersPage from './pages/UsersPage';
 import PropertiesPage from './pages/PropertiesPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import ResetPassword from './pages/ResetPassword';
+import PaymentsPage from './pages/PaymentsPage';
 import { AuthContext } from './context/AuthContext';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Route path="/" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
       <Route path="/users" element={isAuthenticated ? <UsersPage /> : <Navigate to="/login" />} />
       <Route path="/properties" element={isAuthenticated ? <PropertiesPage /> : <Navigate to="/login" />} />
+      <Route path="/payments" element={isAuthenticated ? <PaymentsPage /> : <Navigate to="/login" />} />
     </Routes>
   );
 }

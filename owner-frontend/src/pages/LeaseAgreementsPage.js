@@ -3,20 +3,21 @@ import {
   Box, 
   Typography, 
   Alert, 
-  CircularProgress, 
   Card, 
   CardContent, 
   Button, 
   Grid,
   Chip,
-  Paper
+  Paper,
+  Stack,
+  Divider,
+  Avatar
 } from '@mui/material';
 import { 
-  Download, 
-  HomeWork, 
-  Person, 
-  DateRange, 
-  MonetizationOn 
+  Download as DownloadIcon, 
+  Person as PersonIcon, 
+  Description as DescriptionIcon,
+  Verified as VerifiedIcon
 } from '@mui/icons-material';
 import api from '../utils/api';
 import MainLayout from '../layout/MainLayout';
@@ -31,65 +32,28 @@ const LeaseAgreementsPage = () => {
       try {
         setLoading(true);
         const response = await api.get('/leases/lease-agreements');
-        
-        if (!response.data || !Array.isArray(response.data)) {
-          throw new Error('Invalid response format');
-        }
-        
-        setLeaseAgreements(response.data);
+        setLeaseAgreements(Array.isArray(response.data) ? response.data : []);
         setError(null);
       } catch (error) {
-        console.error('Detailed Error:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
-        });
-        
-        if (error.response) {
-          switch (error.response.status) {
-            case 401:
-              setError('Unauthorized. Please log in again.');
-              break;
-            case 403:
-              setError('You do not have permission to view lease agreements.');
-              break;
-            case 404:
-              setError('No lease agreements found.');
-              break;
-            case 500:
-              setError('Server error. Please try again later.');
-              break;
-            default:
-              setError(error.response.data.message || 'Failed to fetch lease agreements');
-          }
-        } else if (error.request) {
-          setError('No response from server. Please check your network connection.');
-        } else {
-          setError('Error setting up the request: ' + error.message);
-        }
+        console.error('Fetch Error:', error);
+        setError('Failed to fetch lease agreements. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchLeaseAgreements();
   }, []);
 
   const handleDownloadAgreement = async (leaseId) => {
     try {
-      // Generate lease agreement first
       await api.post(`/leases/create-agreement/${leaseId}`);
-      
-      // Then download the generated agreement
       const response = await api.get(`/leases/download-agreement/${leaseId}`, {
         responseType: 'blob'
       });
-
-      // Create a blob and download
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
-      link.download = `lease-agreement-${leaseId}.pdf`;
+      link.download = `Lease_Agreement_${leaseId}.pdf`;
       link.click();
     } catch (error) {
       console.error('Download error:', error);
@@ -98,169 +62,169 @@ const LeaseAgreementsPage = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric'
     });
   };
 
-  const getStatusVariant = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'success';
-      case 'pending': return 'warning';
-      case 'terminated': return 'error';
-      case 'completed': return 'default';
-      default: return 'primary';
+      case 'active': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'terminated': return '#ef4444';
+      default: return '#94a3b8';
     }
   };
 
+  if (loading) {
+    return (
+      <MainLayout>
+        <Box sx={{ width: '100%', mt: 10, px: 3 }}>
+          <LinearProgress sx={{ borderRadius: 5, height: 6 }} />
+          <Typography variant="body2" align="center" sx={{ mt: 2, color: '#94a3b8' }}>
+            Preparing legal documents...
+          </Typography>
+        </Box>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
-      <Box 
-        sx={{ 
-          p: 4,
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          minHeight: '100vh'
-        }}
-      >
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            p: 4, 
-            borderRadius: 3,
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(10px)'
-          }}
-        >
-           <Typography 
-          variant="h3" 
-          gutterBottom 
-          sx={{ 
-            marginBottom: 3,
-            fontWeight: 600,
-            background: 'linear-gradient(45deg, #3f51b5, #2196f3)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}
-        >
-          Lease Agreements
-        </Typography>
-
-          {loading && (
-            <Box display="flex" justifyContent="center" mt={4}>
-              <CircularProgress size={60} thickness={4} />
-            </Box>
-          )}
-
-          {error && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mt: 2, 
-                borderRadius: 2,
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)' 
-              }}
-            >
-              {error}
-            </Alert>
-          )}
-
-          {!loading && !error && leaseAgreements.length === 0 && (
-            <Typography 
-              variant="h6" 
-              color="textSecondary" 
-              align="center"
-              sx={{ mt: 4 }}
-            >
-              No lease agreements found.
+      <Box sx={{ p: { xs: 2, md: 4 } }}>
+        {/* Header Section */}
+        <Box mb={4} display="flex" justifyContent="space-between" alignItems="flex-end">
+          <Box>
+            <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Lease Repository
             </Typography>
-          )}
+            <Typography variant="body1" sx={{ color: '#94a3b8' }}>Access and manage all formal tenant-landlord agreements.</Typography>
+          </Box>
+          <Box className="glass-card" sx={{ p: 1, px: 2, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <VerifiedIcon sx={{ color: '#10b981' }} />
+            <Typography variant="caption" sx={{ color: '#f1f5f9', fontWeight: 700 }}>{leaseAgreements.length} SECURED CONTRACTS</Typography>
+          </Box>
+        </Box>
 
-          <Grid container spacing={4}>
-            {leaseAgreements.map((lease) => (
-              <Grid item xs={12} md={6} lg={4} key={lease._id}>
-                <Card 
-                  sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    transition: 'transform 0.3s ease-in-out',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
-                    },
-                    borderRadius: 3,
-                    background: 'linear-gradient(145deg, #ffffff, #f0f0f0)'
-                  }}
-                  elevation={6}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <HomeWork sx={{ color: '#3f51b5', mr: 1 }} />
-                      <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-                        {lease.property?.address || 'Property Address'}
-                      </Typography>
-                      <Chip 
-                        label={lease.status} 
-                        color={getStatusVariant(lease.status)}
-                        size="small"
-                        sx={{ 
-                          fontWeight: 'bold',
-                          textTransform: 'capitalize'
-                        }}
-                      />
-                    </Box>
+        {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 3 }}>{error}</Alert>}
 
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <Person sx={{ color: '#4caf50', mr: 1 }} />
-                      <Typography variant="body1">
-                        {lease.tenant?.name || 'Tenant Name'}
-                      </Typography>
-                    </Box>
+        {leaseAgreements.length === 0 && !loading && (
+          <Paper className="glass-panel" sx={{ p: 10, textAlign: 'center', borderRadius: 5 }}>
+            <DescriptionIcon sx={{ fontSize: 80, color: 'rgba(255,255,255,0.05)', mb: 2 }} />
+            <Typography variant="h5" sx={{ color: '#64748b', fontWeight: 700 }}>No agreements found</Typography>
+            <Typography variant="body2" sx={{ color: '#475569', mt: 1 }}>Agreements will appear here once properties are occupied.</Typography>
+          </Paper>
+        )}
 
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <DateRange sx={{ color: '#ff9800', mr: 1 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDate(lease.startDate)} - {formatDate(lease.endDate)}
-                      </Typography>
-                    </Box>
+        <Grid container spacing={3}>
+          {leaseAgreements.map((lease) => (
+            <Grid item xs={12} md={6} lg={4} key={lease._id}>
+              <Card 
+                className="glass-card card-hover"
+                sx={{ 
+                  height: '100%', 
+                  borderRadius: 4,
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  position: 'relative',
+                  overflow: 'visible'
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  {/* Status Badge */}
+                  <Box sx={{ position: 'absolute', top: -12, right: 20 }}>
+                    <Chip 
+                      label={lease.status} 
+                      size="small"
+                      sx={{ 
+                        bgcolor: getStatusColor(lease.status),
+                        color: '#fff',
+                        fontWeight: 900,
+                        textTransform: 'uppercase',
+                        fontSize: '0.65rem',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                      }}
+                    />
+                  </Box>
 
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <MonetizationOn sx={{ color: '#2196f3', mr: 1 }} />
-                      <Typography variant="h6" color="primary">
-                        Rs.{lease.rentAmount.toLocaleString()} / month
+                  <Stack spacing={2.5}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 700 }}>Property Address</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 800, color: '#f1f5f9', mt: 0.5, lineHeight: 1.3 }}>
+                        {lease.property?.address}
                       </Typography>
                     </Box>
+
+                    <Divider sx={{ opacity: 0.05 }} />
+
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Avatar sx={{ bgcolor: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+                        <PersonIcon />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>TENANT</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 700, color: '#f1f5f9' }}>{lease.tenant?.name}</Typography>
+                      </Box>
+                    </Box>
+
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Box>
+                          <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>START DATE</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#cbd5e1' }}>{formatDate(lease.startDate)}</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box>
+                          <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>MONTHLY RENT</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 800, color: '#10b981' }}>${lease.rentAmount.toLocaleString()}</Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
 
                     <Button
                       fullWidth
                       variant="contained"
-                      color="primary"
-                      startIcon={<Download />}
+                      startIcon={<DownloadIcon />}
                       onClick={() => handleDownloadAgreement(lease._id)}
                       sx={{
-                        borderRadius: 2,
+                        mt: 2,
+                        py: 1.5,
+                        borderRadius: 3,
                         textTransform: 'none',
-                        fontWeight: 'bold',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                        boxShadow: '0 8px 16px rgba(37, 99, 235, 0.2)',
                         '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 8px rgba(0,0,0,0.3)'
+                          background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                          transform: 'translateY(-2px)'
                         }
                       }}
                     >
-                      Download Agreement
+                      Download PDF Agreement
                     </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Paper>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </Box>
     </MainLayout>
   );
 };
+
+const LinearProgress = ({ sx }) => (
+  <Box sx={{ width: '100%', bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, overflow: 'hidden', ...sx }}>
+    <Box sx={{ width: '30%', height: '100%', bgcolor: '#3b82f6', animation: 'loading 1.5s infinite ease-in-out' }} />
+    <style>{`
+      @keyframes loading {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(400%); }
+      }
+    `}</style>
+  </Box>
+);
 
 export default LeaseAgreementsPage;

@@ -6,7 +6,6 @@ import Register from './views/Register';
 import Dashboard from './views/Dashboard';
 import NotFound from './views/NotFound';
 import ProtectedRoute from './components/Common/ProtectedRoute';
-import Navbar from './components/Layout/Navbar';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -21,7 +20,6 @@ function App() {
       <Elements stripe={stripePromise}>
         <Router>
           <ErrorBoundary>
-            <Navbar /> {/* Fixed Navbar */}
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
@@ -50,7 +48,7 @@ function App() {
               {/* 404 Not Found */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <ToastContainer /> {/* Toast Notifications */}
+            <ToastContainer theme="dark" position="top-right" autoClose={3000} hideProgressBar={false} /> {/* Toast Notifications */}
           </ErrorBoundary>
         </Router>
       </Elements>

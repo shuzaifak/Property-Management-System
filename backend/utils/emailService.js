@@ -1,90 +1,148 @@
-const nodemailer = require('nodemailer');
-const { emailUser, emailPass } = require('../config/config');
+const sgMail = require('@sendgrid/mail');
+const { sendgridApiKey, emailUser } = require('../config/config');
 
-// Validate email configuration
-if (!emailUser || !emailPass) {
-  console.error('Missing email configuration. Please check your .env file for EMAIL_USER and EMAIL_PASS');
-  process.exit(1);
+// Initialize SendGrid
+if (sendgridApiKey) {
+  sgMail.setApiKey(sendgridApiKey);
+  console.log('SendGrid API Key initialized');
+} else {
+  console.warn('SENDGRID_API_KEY is not set. Emails will not be sent.');
 }
 
-// Create transporter with more robust configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: emailUser,
-    pass: emailPass
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+/**
+ * Standard Email Template Wrapper
+ */
+const wrapHtml = (content, subject) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f9;
+          }
+          .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+          }
+          .header {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+          }
+          .content {
+            padding: 40px 30px;
+          }
+          .footer {
+            background-color: #f8fafc;
+            color: #64748b;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            border-top: 1px solid #e2e8f0;
+          }
+          .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2563eb;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 20px;
+          }
+          .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+          }
+          hr {
+            border: 0;
+            border-top: 1px solid #e2e8f0;
+            margin: 25px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Property Sync</h1>
+          </div>
+          <div class="content">
+            ${content}
+          </div>
+          <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} Property Sync Management System</p>
+            <p>Reliable Property Solutions</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
 
-// Verify the connection configuration
-transporter.verify(function(error, success) {
-  if (error) {
-    console.error('SMTP connection error:', error);
-  } else {
-    console.log('Email server is ready to send messages');
-  }
-});
-
-// Enhanced sendEmail function with HTML support
+/**
+ * Sends an email using SendGrid.
+ * @param {string} to - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} html - HTML content (will be wrapped in template)
+ */
 const sendEmail = async (to, subject, html) => {
+  if (!sendgridApiKey) {
+    console.error('Cannot send email: SENDGRID_API_KEY is missing');
+    return null;
+  }
+
+  // Wrap the provided HTML in our standard template
+  const finalHtml = wrapHtml(html, subject);
+
+  const msg = {
+    to,
+    from: emailUser || 'noreply@propertysync.com',
+    subject,
+    text: html.replace(/<[^>]*>?/gm, ''), // Plain text fallback
+    html: finalHtml,
+  };
+
   try {
-    // Validate all required parameters
-    if (!to || !subject || !html) {
-      throw new Error('Missing required email parameters');
-    }
-
-    // Prepare mail options with both HTML and plain text
-    const mailOptions = {
-      from: {
-        name: 'Property Sync',
-        address: emailUser
-      },
-      to,
-      subject,
-      html,
-      text: html.replace(/<[^>]*>?/gm, '') // Convert HTML to plain text fallback
-    };
-
-    // Send email with detailed logging
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', {
-      messageId: info.messageId,
-      recipient: to,
-      subject: subject
-    });
-
-    return info;
+    const response = await sgMail.send(msg);
+    console.log(`Email sent to ${to} via SendGrid`);
+    return response;
   } catch (error) {
-    console.error('Failed to send email:', {
-      error: error.message,
-      stack: error.stack,
-      recipient: to,
-      subject: subject
-    });
+    console.error('SendGrid error:', error.response ? error.response.body : error);
     throw error;
   }
 };
 
-// Bulk email sending utility
+/**
+ * Sends bulk emails using SendGrid.
+ */
 const sendBulkEmails = async (recipients, subject, html) => {
   const results = [];
   for (const recipient of recipients) {
     try {
-      const result = await sendEmail(recipient, subject, html);
-      results.push({
-        email: recipient,
-        status: 'success',
-        messageId: result.messageId
-      });
+      await sendEmail(recipient, subject, html);
+      results.push({ email: recipient, status: 'success' });
     } catch (error) {
-      results.push({
-        email: recipient,
-        status: 'failed',
-        error: error.message
-      });
+      results.push({ email: recipient, status: 'failed', error: error.message });
     }
   }
   return results;

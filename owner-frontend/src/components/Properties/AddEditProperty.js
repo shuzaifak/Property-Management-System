@@ -8,9 +8,10 @@ import {
   Grid, 
   Box, 
   IconButton,
-  Divider
+  Divider,
+  Stack
 } from '@mui/material';
-import { Delete, CloudUpload, Home, LocationOn, AttachMoney } from '@mui/icons-material';
+import { Delete, CloudUpload } from '@mui/icons-material';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
@@ -34,7 +35,6 @@ const AddEditProperty = () => {
     const id = searchParams.get('id');
     if (id) {
       setPropertyId(id);
-      // Fetch property data
       const fetchProperty = async () => {
         try {
           const res = await api.get(`/properties?id=${id}`);
@@ -53,81 +53,42 @@ const AddEditProperty = () => {
     }
   }, [searchParams]);
 
-  // Validation function
   const validateForm = () => {
     const newErrors = {};
-
-    // Title validation
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-
-    // Address validation
-    if (!address.trim()) {
-      newErrors.address = 'Address is required';
-    }
-
-    // Price validation
-    if (!price) {
-      newErrors.price = 'Price is required';
-    } else if (isNaN(Number(price)) || Number(price) <= 0) {
-      newErrors.price = 'Price must be a positive number';
-    }
-
-    // Images validation (for new property)
-    if (!propertyId && images.length === 0 && existingImages.length === 0) {
-      newErrors.images = 'At least one image is required';
-    }
-
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (!address.trim()) newErrors.address = 'Address is required';
+    if (!price) newErrors.price = 'Price is required';
+    else if (isNaN(Number(price)) || Number(price) <= 0) newErrors.price = 'Price must be a positive number';
+    if (!propertyId && images.length === 0 && existingImages.length === 0) newErrors.images = 'At least one image is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleImageChange = (e) => {
-    // Allow up to 4 images
-    const selectedImages = Array.from(e.target.files).slice(0, 4 - images.length);
+    const selectedImages = Array.from(e.target.files).slice(0, 4 - (images.length + existingImages.length));
     setImages([...images, ...selectedImages]);
-    
-    // Clear image error when images are added
-    if (selectedImages.length > 0) {
-      setErrors(prev => ({ ...prev, images: undefined }));
-    }
+    if (selectedImages.length > 0) setErrors(prev => ({ ...prev, images: undefined }));
   };
 
   const handleSubmit = async () => {
-    // Reset submit error
     setSubmitError('');
-
-    // Validate form
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     const formData = new FormData();
     formData.append('title', title);
     formData.append('address', address);
     formData.append('price', Number(price));
     formData.append('description', description);
-
-    // Append images
-    images.forEach((image) => {
-      formData.append('images', image);
-    });
+    images.forEach((image) => formData.append('images', image));
 
     try {
       if (propertyId) {
-        await api.put(`/properties/${propertyId}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.put(`/properties/${propertyId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       } else {
-        await api.post('/properties', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await api.post('/properties', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       }
       navigate('/properties');
     } catch (err) {
       setSubmitError(err.response?.data?.message || 'Failed to save property');
-      console.error('Failed to save property', err.message);
     }
   };
 
@@ -144,336 +105,129 @@ const AddEditProperty = () => {
   };
 
   return (
-    <Box 
-      sx={{ 
-        maxWidth: 800, 
-        margin: 'auto', 
-        padding: 3,
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-    >
-      <Paper 
-        elevation={12} 
-        sx={{ 
-          width: '100%',
-          borderRadius: 4, 
-          overflow: 'hidden',
-          boxShadow: '0 15px 30px rgba(0,0,0,0.1)',
-          transform: 'perspective(1000px) rotateX(2deg)',
-          transition: 'transform 0.3s ease-in-out',
-          '&:hover': {
-            transform: 'perspective(1000px) rotateX(0)'
-          }
-        }}
-      >
-        <Box 
-          sx={{ 
-            background: 'linear-gradient(to right, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            padding: 3,
-            textAlign: 'center'
-          }}
-        >
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              fontWeight: 'bold', 
-              letterSpacing: 1,
-              textShadow: '1px 1px 2px rgba(0,0,0,0.2)'
-            }}
-          >
-            {propertyId ? 'Edit Property' : 'List New Property'}
-          </Typography>
-        </Box>
+    <Box sx={{ maxWidth: 800, margin: 'auto', py: 2 }}>
+      <Box mb={4}>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+          {propertyId ? 'Edit Property' : 'Add New Property'}
+        </Typography>
+        <Typography variant="body1" color="textSecondary">
+          Fill in the details below to {propertyId ? 'update your' : 'list a new'} property.
+        </Typography>
+      </Box>
 
-        <Box sx={{ padding: 4 }}>
-          {submitError && (
-            <Alert 
-              severity="error" 
-              sx={{ mb: 3, borderRadius: 2 }}
-            >
-              {submitError}
-            </Alert>
-          )}
+      <Paper className="glass-panel" sx={{ p: 4, borderRadius: 4, border: 'none' }}>
+        {submitError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{submitError}</Alert>}
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField 
-                label="Property Title" 
-                variant="outlined" 
-                fullWidth 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)}
-                error={!!errors.title}
-                helperText={errors.title}
-                InputProps={{
-                  startAdornment: (
-                    <Home 
-                      sx={{ 
-                        color: 'action.active', 
-                        mr: 1, 
-                        fontSize: 24 
-                      }} 
-                    />
-                  ),
-                }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 3,
-                    '&:hover fieldset': {
-                      borderColor: 'primary.main',
-                    },
-                  }
-                }}
-              />
-            </Grid>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField 
+              label="Property Title" 
+              fullWidth 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)}
+              error={!!errors.title}
+              helperText={errors.title}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+            />
+          </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField 
-                label="Address" 
-                variant="outlined" 
-                fullWidth 
-                value={address} 
-                onChange={(e) => setAddress(e.target.value)}
-                error={!!errors.address}
-                helperText={errors.address}
-                InputProps={{
-                  startAdornment: (
-                    <LocationOn 
-                      sx={{ 
-                        color: 'action.active', 
-                        mr: 1, 
-                        fontSize: 24 
-                      }} 
-                    />
-                  ),
-                }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 3,
-                    '&:hover fieldset': {
-                      borderColor: 'primary.main',
-                    },
-                  }
-                }}
-              />
-            </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField 
+              label="Address" 
+              fullWidth 
+              value={address} 
+              onChange={(e) => setAddress(e.target.value)}
+              error={!!errors.address}
+              helperText={errors.address}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+            />
+          </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField 
-                label="Price" 
-                variant="outlined" 
-                type="number" 
-                fullWidth 
-                value={price} 
-                onChange={(e) => setPrice(e.target.value)}
-                error={!!errors.price}
-                helperText={errors.price}
-                InputProps={{
-                  startAdornment: (
-                    <AttachMoney 
-                      sx={{ 
-                        color: 'action.active', 
-                        mr: 1, 
-                        fontSize: 24 
-                      }} 
-                    />
-                  ),
-                }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 3,
-                    '&:hover fieldset': {
-                      borderColor: 'primary.main',
-                    },
-                  }
-                }}
-              />
-            </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField 
+              label="Price (per month)" 
+              type="number" 
+              fullWidth 
+              value={price} 
+              onChange={(e) => setPrice(e.target.value)}
+              error={!!errors.price}
+              helperText={errors.price}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+            />
+          </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField 
-                label="Description" 
-                variant="outlined" 
-                fullWidth 
-                multiline 
-                rows={4} 
-                value={description} 
-                onChange={(e) => setDescription(e.target.value)}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: 3,
-                    '&:hover fieldset': {
-                      borderColor: 'primary.main',
-                    },
-                  }
-                }}
-              />
-            </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField 
+              label="Description" 
+              fullWidth 
+              multiline 
+              rows={3} 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+            />
+          </Grid>
 
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }}>
-                <Typography variant="subtitle1" color="textSecondary">
-                  Property Images (Max 4)
-                </Typography>
-              </Divider>
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1, opacity: 0.1 }} />
+            <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 2, mt: 1 }}>
+              Property Images (Max 4)
+            </Typography>
 
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  mb: 2 
-                }}
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<CloudUpload />}
+                disabled={images.length + existingImages.length >= 4}
+                sx={{ borderRadius: 3, px: 3, borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
               >
-                <Button
-                  variant="contained"
-                  component="label"
-                  startIcon={<CloudUpload />}
-                  disabled={images.length + existingImages.length >= 4}
-                  sx={{
-                    borderRadius: 3,
-                    padding: '10px 20px',
-                    background: 'linear-gradient(to right, #6a11cb 0%, #2575fc 100%)',
-                    '&:hover': {
-                      opacity: 0.9
-                    }
-                  }}
-                >
-                  Upload Images
-                  <input
-                    type="file"
-                    hidden
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                </Button>
-              </Box>
-
-              {errors.images && (
-                <Typography 
-                  color="error" 
-                  variant="body2" 
-                  align="center"
-                  sx={{ mb: 2 }}
-                >
-                  {errors.images}
-                </Typography>
-              )}
-
-              <Grid container spacing={2} justifyContent="center">
-                {/* Existing Images */}
-                {existingImages.map((img, index) => (
-                  <Grid item xs={6} sm={3} key={index}>
-                    <Box 
-                      sx={{ 
-                        position: 'relative', 
-                        borderRadius: 3, 
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.3s',
-                        '&:hover': {
-                          transform: 'scale(1.05)'
-                        }
-                      }}
-                    >
-                      <img 
-                        src={`/uploads${img}`} 
-                        alt={`Property ${index + 1}`} 
-                        style={{ 
-                          width: '100%', 
-                          height: 150, 
-                          objectFit: 'cover'
-                        }} 
-                      />
-                      <IconButton
-                        size="small"
-                        color="error"
-                        sx={{ 
-                          position: 'absolute', 
-                          top: 5, 
-                          right: 5, 
-                          backgroundColor: 'rgba(255,255,255,0.7)' 
-                        }}
-                        onClick={() => removeImage(index, true)}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Grid>
-                ))}
-
-                {/* New Images */}
-                {images.map((img, index) => (
-                  <Grid item xs={6} sm={3} key={index}>
-                    <Box 
-                      sx={{ 
-                        position: 'relative', 
-                        borderRadius: 3, 
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.3s',
-                        '&:hover': {
-                          transform: 'scale(1.05)'
-                        }
-                      }}
-                    >
-                      <img 
-                        src={URL.createObjectURL(img)} 
-                        alt={`New Property ${index + 1}`} 
-                        style={{ 
-                          width: '100%', 
-                          height: 150, 
-                          objectFit: 'cover'
-                        }} 
-                      />
-                      <IconButton
-                        size="small"
-                        color="error"
-                        sx={{ 
-                          position: 'absolute', 
-                          top: 5, 
-                          right: 5, 
-                          backgroundColor: 'rgba(255,255,255,0.7)' 
-                        }}
-                        onClick={() => removeImage(index)}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Button 
-                variant="contained" 
-                fullWidth 
-                onClick={handleSubmit}
-                sx={{
-                  borderRadius: 3,
-                  padding: '12px 0',
-                  background: 'linear-gradient(to right, #667eea 0%, #764ba2 100%)',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  letterSpacing: 1,
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 7px 14px rgba(50,50,93,0.1), 0 3px 6px rgba(0,0,0,0.08)'
-                  }
-                }}
-              >
-                {propertyId ? 'Update Property' : 'Add Property'}
+                Upload Images
+                <input type="file" hidden multiple accept="image/*" onChange={handleImageChange} />
               </Button>
+            </Stack>
+
+            {errors.images && <Typography color="error" variant="caption" display="block" sx={{ mb: 2 }}>{errors.images}</Typography>}
+
+            <Grid container spacing={2}>
+              {existingImages.map((img, index) => (
+                <Grid item xs={6} sm={3} key={`existing-${index}`}>
+                  <Box sx={{ position: 'relative', borderRadius: 3, overflow: 'hidden', height: 120 }}>
+                    <img src={`http://localhost:5000${img}`} alt="Property" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <IconButton size="small" color="error" sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(0,0,0,0.5)', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }} onClick={() => removeImage(index, true)}><Delete fontSize="small" /></IconButton>
+                  </Box>
+                </Grid>
+              ))}
+              {images.map((img, index) => (
+                <Grid item xs={6} sm={3} key={`new-${index}`}>
+                  <Box sx={{ position: 'relative', borderRadius: 3, overflow: 'hidden', height: 120 }}>
+                    <img src={URL.createObjectURL(img)} alt="New Property" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <IconButton size="small" color="error" sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(0,0,0,0.5)', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }} onClick={() => removeImage(index)}><Delete fontSize="small" /></IconButton>
+                  </Box>
+                </Grid>
+              ))}
             </Grid>
           </Grid>
-        </Box>
+
+          <Grid item xs={12} sx={{ mt: 2 }}>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button onClick={() => navigate('/properties')} sx={{ color: 'text.secondary' }}>Cancel</Button>
+              <Button 
+                variant="contained" 
+                onClick={handleSubmit}
+                sx={{ 
+                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)', 
+                  borderRadius: 3, 
+                  px: 4, 
+                  fontWeight: 600,
+                  boxShadow: '0 4px 20px rgba(37,99,235,0.4)'
+                }}
+              >
+                {propertyId ? 'Update Property' : 'List Property'}
+              </Button>
+            </Stack>
+          </Grid>
+        </Grid>
       </Paper>
     </Box>
   );

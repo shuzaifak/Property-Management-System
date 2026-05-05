@@ -2,11 +2,37 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
-  amount: { type: Number, required: true },
-  status: { type: String, enum: ['paid', 'pending', 'failed'], default: 'pending' },
-  transactionId: String,
+  lease: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Lease',
+    required: true,
+  },
+  tenant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  amount: {
+    type: Number,
+    required: true,
+  },
+  paymentMethod: {
+    type: String,
+    required: true,
+    default: 'card',
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+  status: {
+    type: String,
+    enum: ['completed', 'pending', 'failed'],
+    default: 'pending',
+  },
+  stripePaymentIntentId: {
+    type: String,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Payment', paymentSchema);

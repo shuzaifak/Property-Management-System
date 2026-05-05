@@ -2,13 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { 
   Typography, 
   Button, 
-  Container, 
   Box, 
-  Grid, 
   Snackbar, 
   Alert,
-  Card,
-  CardContent,
   LinearProgress
 } from '@mui/material';
 import { 
@@ -57,87 +53,44 @@ const OwnerProperties = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ 
-      py: 4,
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh'
-    }}>
-      <Card 
-        elevation={6} 
-        sx={{ 
-          borderRadius: 3,
-          boxShadow: '0 8px 40px -12px rgba(0,0,0,0.3)'
-        }}
-      >
-        <CardContent sx={{ p: 4 }}>
-          {loading && <LinearProgress color="primary" />}
-          
-          <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-            <Grid item>
-              <Typography 
-                variant="h4" 
-                component="h1" 
-                sx={{ 
-                  fontWeight: 700, 
-                  color: 'primary.main',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)' 
-                }}
-              >
-                My Properties
-              </Typography>
-            </Grid>
-            <Grid item>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<AddIcon />} 
-                onClick={handleAddProperty}
-                sx={{ 
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1
-                }}
-              >
-                Add New Property
-              </Button>
-            </Grid>
-          </Grid>
+    <Box sx={{ py: 2 }}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>My Properties</Typography>
+        </Box>
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon />} 
+          onClick={handleAddProperty}
+          sx={{ 
+            background: 'linear-gradient(135deg, #2563eb, #3b82f6)', 
+            boxShadow: '0 4px 20px rgba(37,99,235,0.4)', 
+            borderRadius: 3, 
+            px: 3 
+          }}
+        >
+          Add New Property
+        </Button>
+      </Box>
 
-          {loading ? (
-            <Box textAlign="center" my={4}>
-              <Typography variant="h6" color="textSecondary">
-                Loading your properties...
-              </Typography>
-            </Box>
-          ) : properties.length === 0 ? (
-            <Card 
-              variant="outlined" 
-              sx={{ 
-                textAlign: 'center', 
-                my: 4, 
-                py: 4, 
-                borderColor: 'primary.light',
-                backgroundColor: 'grey.100'
-              }}
-            >
-              <ErrorIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" color="textSecondary">
-                You have no properties listed yet.
-              </Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                Click "Add New Property" to get started
-              </Typography>
-            </Card>
-          ) : (
-            <PropertyTable 
-              properties={properties} 
-              setProperties={setProperties} 
-            />
-          )}
-        </CardContent>
-      </Card>
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={8}><LinearProgress sx={{ width: '100%', borderRadius: 2 }} /></Box>
+      ) : properties.length === 0 ? (
+        <Box className="glass-card" sx={{ textAlign: 'center', py: 8 }}>
+          <ErrorIcon sx={{ fontSize: 60, color: 'rgba(255,255,255,0.2)', mb: 2 }} />
+          <Typography variant="h6" color="textSecondary">
+            You have no properties listed yet.
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Click "Add New Property" to get started
+          </Typography>
+        </Box>
+      ) : (
+        <PropertyTable 
+          properties={properties} 
+          setProperties={setProperties} 
+        />
+      )}
 
       <Snackbar 
         open={!!error} 
@@ -154,7 +107,7 @@ const OwnerProperties = () => {
           {error}
         </Alert>
       </Snackbar>
-    </Container>
+    </Box>
   );
 };
 

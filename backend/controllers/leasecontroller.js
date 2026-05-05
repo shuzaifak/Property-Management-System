@@ -95,20 +95,148 @@ exports.generateLeaseAgreement = async (req, res) => {
     const lease = await Lease.findById(leaseId).populate('tenant').populate('property');
     if (!lease) return res.status(404).json({ message: 'Lease not found' });
 
-    // Prepare HTML content for the lease agreement
+    // Prepare HTML content for a professional lease agreement
     const htmlContent = `
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Lease Agreement</title>
+          <meta charset="utf-8">
+          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+          <style>
+            body { 
+              font-family: 'Outfit', sans-serif; 
+              color: #1e293b; 
+              line-height: 1.6; 
+              margin: 0; 
+              padding: 40px; 
+            }
+            .header { 
+              border-bottom: 4px solid #3b82f6; 
+              padding-bottom: 20px; 
+              margin-bottom: 40px; 
+              display: flex; 
+              justify-content: space-between; 
+              align-items: center; 
+            }
+            .logo { 
+              font-size: 28px; 
+              font-weight: 800; 
+              color: #1d4ed8; 
+              letter-spacing: -1px; 
+            }
+            .agreement-title { 
+              text-align: right; 
+              text-transform: uppercase; 
+              letter-spacing: 2px; 
+              font-size: 14px; 
+              color: #64748b; 
+            }
+            h1 { font-size: 32px; font-weight: 800; margin: 0; }
+            .section { margin-bottom: 30px; }
+            .section-title { 
+              font-size: 16px; 
+              font-weight: 700; 
+              color: #3b82f6; 
+              text-transform: uppercase; 
+              margin-bottom: 15px; 
+              border-bottom: 1px solid #e2e8f0; 
+              padding-bottom: 5px; 
+            }
+            .grid { display: flex; flex-wrap: wrap; gap: 20px; }
+            .grid-item { flex: 1; min-width: 200px; }
+            .label { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+            .value { font-size: 16px; font-weight: 600; color: #0f172a; }
+            .footer { 
+              margin-top: 60px; 
+              padding-top: 20px; 
+              border-top: 1px solid #e2e8f0; 
+              font-size: 12px; 
+              color: #94a3b8; 
+              text-align: center; 
+            }
+            .signature-box { 
+              margin-top: 50px; 
+              display: flex; 
+              justify-content: space-between; 
+              gap: 100px; 
+            }
+            .sig-line { 
+              border-top: 2px solid #0f172a; 
+              padding-top: 10px; 
+              width: 200px; 
+              text-align: center; 
+            }
+          </style>
         </head>
         <body>
-          <h1>Lease Agreement</h1>
-          <p><strong>Tenant:</strong> ${lease.tenant.name}</p>
-          <p><strong>Property:</strong> ${lease.property.address}</p>
-          <p><strong>Start Date:</strong> ${new Date(lease.startDate).toLocaleDateString()}</p>
-          <p><strong>End Date:</strong> ${new Date(lease.endDate).toLocaleDateString()}</p>
-          <p><strong>Rent Amount:</strong> £${lease.rentAmount}</p>
-          <p><strong>Status:</strong> ${lease.status}</p>
+          <div class="header">
+            <div class="logo">PropertySync</div>
+            <div class="agreement-title">Residential Lease Agreement</div>
+          </div>
+
+          <div class="section">
+            <h1>Agreement Details</h1>
+            <p>This Residential Lease Agreement is entered into on this day <strong>${new Date().toLocaleDateString()}</strong> between the Landlord and the Tenant named below.</p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Parties & Property</div>
+            <div class="grid">
+              <div class="grid-item">
+                <div class="label">Tenant Name</div>
+                <div class="value">${lease.tenant.name}</div>
+              </div>
+              <div class="grid-item">
+                <div class="label">Email Address</div>
+                <div class="value">${lease.tenant.email}</div>
+              </div>
+            </div>
+            <div style="margin-top: 20px;">
+              <div class="label">Property Address</div>
+              <div class="value" style="font-size: 20px;">${lease.property.address}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Lease Terms</div>
+            <div class="grid">
+              <div class="grid-item">
+                <div class="label">Start Date</div>
+                <div class="value">${new Date(lease.startDate).toLocaleDateString()}</div>
+              </div>
+              <div class="grid-item">
+                <div class="label">End Date</div>
+                <div class="value">${new Date(lease.endDate).toLocaleDateString()}</div>
+              </div>
+              <div class="grid-item">
+                <div class="label">Monthly Rent</div>
+                <div class="value" style="color: #10b981;">$${lease.rentAmount.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Terms & Conditions</div>
+            <p>1. <strong>Rent Payment:</strong> Rent is due on the 1st of every month.</p>
+            <p>2. <strong>Security Deposit:</strong> A deposit equivalent to one month's rent is required.</p>
+            <p>3. <strong>Maintenance:</strong> The tenant agrees to keep the premises in a clean and sanitary condition.</p>
+            <p>4. <strong>Occupancy:</strong> The premises shall be used only as a private residence.</p>
+          </div>
+
+          <div class="signature-box">
+            <div class="sig-line">
+              <div class="label">Landlord Signature</div>
+              <div style="margin-top: 20px;">Date: ____________</div>
+            </div>
+            <div class="sig-line">
+              <div class="label">Tenant Signature</div>
+              <div style="margin-top: 20px;">Date: ____________</div>
+            </div>
+          </div>
+
+          <div class="footer">
+            Generated by PropertySync Management System • ${new Date().getFullYear()}
+          </div>
         </body>
       </html>
     `;

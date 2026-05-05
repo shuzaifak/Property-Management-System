@@ -7,5 +7,6 @@ module.exports = {
   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   emailUser: process.env.EMAIL_USER,
   emailPass: process.env.EMAIL_PASS,
+  sendgridApiKey: process.env.SENDGRID_API_KEY,
   port: process.env.PORT || 5000,
 };

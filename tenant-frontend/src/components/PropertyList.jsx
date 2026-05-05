@@ -17,19 +17,23 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import PriceIcon from '@mui/icons-material/AttachMoney';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { toast } from 'react-toastify';
+import { AuthContext } from '../contexts/AuthContext';
+import { useContext } from 'react';
 
 // Styled components
 const GradientBackground = styled(Box)(({ theme }) => ({
-  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+  background: 'rgba(255, 255, 255, 0.03)',
+  backdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 255, 255, 0.05)',
   color: 'white',
   padding: theme.spacing(4),
   borderRadius: theme.spacing(2),
   marginBottom: theme.spacing(4),
-  boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
 }));
 
 const PropertyCard = styled(Card)(({ theme }) => ({
@@ -37,14 +41,45 @@ const PropertyCard = styled(Card)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   borderRadius: theme.spacing(2),
-  transition: 'transform 0.3s, box-shadow 0.3s',
+  background: 'rgba(15, 23, 42, 0.55)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.07)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
     transform: 'translateY(-10px)',
-    boxShadow: '0 15px 30px rgba(0,0,0,0.15)'
+    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+    borderColor: 'rgba(37, 99, 235, 0.5)',
   }
 }));
 
+const ResidenceCard = styled(Card)(({ theme }) => ({
+  display: 'flex',
+  borderRadius: theme.spacing(3),
+  background: 'rgba(30, 41, 59, 0.7)',
+  backdropFilter: 'blur(20px)',
+  border: '2px solid rgba(59, 130, 246, 0.5)',
+  boxShadow: '0 0 30px rgba(37, 99, 235, 0.15)',
+  overflow: 'hidden',
+  transition: 'transform 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.01)',
+  }
+}));
+
+const SectionHeader = styled(Typography)(({ theme }) => ({
+  fontWeight: 800,
+  fontSize: '2rem',
+  marginBottom: theme.spacing(3),
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+}));
+
 const PropertyList = () => {
+  const { user } = useContext(AuthContext);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -89,6 +124,18 @@ const PropertyList = () => {
     setSelectedProperty(property);
     setCurrentImageIndex(0);
     setImageDialogOpen(true);
+  };
+
+  const handleContactOwner = async (property) => {
+    try {
+      const res = await axios.post('/properties/contact-owner', { 
+        propertyId: property._id 
+      });
+      toast.success(res.data.message || 'Inquiry sent to the owner!');
+    } catch (error) {
+      console.error('Contact owner error:', error);
+      toast.error(error.response?.data?.message || 'Failed to send inquiry.');
+    }
   };
 
   const handleCloseImageDialog = () => {
@@ -148,7 +195,101 @@ const PropertyList = () => {
         </Typography>
       </GradientBackground>
 
-      {properties.length === 0 ? (
+      {/* Current Residence Section */}
+      {user?.currentLease && (
+        <Box sx={{ mb: 8 }}>
+          <SectionHeader sx={{ color: '#60a5fa', WebkitTextFillColor: 'unset', background: 'unset' }}>
+            <HomeWorkIcon sx={{ fontSize: '2.5rem' }} /> Your Current Residence
+          </SectionHeader>
+          
+          <Grid container>
+            {properties
+              .filter(p => p._id === (user.currentLease.property?._id || user.currentLease.property || user.currentLease))
+              .map((property) => (
+                <Grid item xs={12} key={property._id}>
+                  <ResidenceCard sx={{ flexDirection: { xs: 'column', md: 'row' } }}>
+                    <CardMedia
+                      component="img"
+                      image={property.images[0] || '/default-property.jpg'}
+                      alt={property.title}
+                      sx={{ 
+                        width: { xs: '100%', md: 450 },
+                        height: { xs: 250, md: 'auto' },
+                        cursor: 'pointer',
+                        filter: 'brightness(0.9)',
+                        transition: 'filter 0.3s',
+                        '&:hover': { filter: 'brightness(1.1)' }
+                      }}
+                      onClick={() => handleOpenImageDialog(property)}
+                    />
+                    <CardContent sx={{ flex: 1, p: { xs: 3, md: 5 }, display: 'flex', flexDirection: 'column' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box>
+                          <Typography variant="h3" sx={{ fontWeight: 800, color: '#f8fafc', mb: 1 }}>
+                            {property.title}
+                          </Typography>
+                          <Typography variant="h6" sx={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LocationOnIcon fontSize="small" /> {property.address}
+                          </Typography>
+                        </Box>
+                        <Chip 
+                          label="ACTIVE LEASE" 
+                          sx={{ 
+                            background: 'rgba(16, 185, 129, 0.15)', 
+                            color: '#10b981', 
+                            fontWeight: 700,
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            borderRadius: '8px'
+                          }} 
+                        />
+                      </Box>
+
+                      <Typography variant="body1" sx={{ color: '#cbd5e1', mt: 2, mb: 4, lineHeight: 1.7, fontSize: '1.1rem' }}>
+                        {property.description}
+                      </Typography>
+
+                      <Box sx={{ mt: 'auto', display: 'flex', gap: 2 }}>
+                        <Button 
+                          variant="contained" 
+                          href="/dashboard/pay-rent"
+                          sx={{ 
+                            borderRadius: 2, 
+                            px: 4, 
+                            py: 1.5,
+                            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                            boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)',
+                            fontWeight: 700
+                          }}
+                        >
+                          Quick Pay Rent
+                        </Button>
+                        <Button 
+                          variant="outlined" 
+                          href="/dashboard/lease-agreements"
+                          sx={{ 
+                            borderRadius: 2, 
+                            px: 4, 
+                            borderColor: 'rgba(255,255,255,0.2)',
+                            color: '#f1f5f9',
+                            '&:hover': { borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.05)' }
+                          }}
+                        >
+                          View Agreement
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </ResidenceCard>
+                </Grid>
+              ))}
+          </Grid>
+        </Box>
+      )}
+
+      <SectionHeader>
+        {user?.currentLease ? 'Browse Other Properties' : 'Available Properties'}
+      </SectionHeader>
+
+      {!user?.currentLease && properties.length === 0 ? (
         <Box 
           sx={{ 
             display: 'flex', 
@@ -170,8 +311,10 @@ const PropertyList = () => {
         </Box>
       ) : (
         <Grid container spacing={4}>
-          {properties.map((property) => (
-            <Grid item xs={12} sm={6} md={4} key={property._id}>
+          {properties
+            .filter(p => p._id !== (user.currentLease?.property?._id || user.currentLease?.property || user.currentLease))
+            .map((property) => (
+              <Grid item xs={12} sm={6} md={4} key={property._id}>
               <PropertyCard>
               <CardMedia
               component="img"
@@ -252,6 +395,7 @@ const PropertyList = () => {
                     variant="contained" 
                     color="primary" 
                     fullWidth
+                    onClick={() => handleContactOwner(property)}
                     sx={{ 
                       borderRadius: 2,
                       py: 1.5,

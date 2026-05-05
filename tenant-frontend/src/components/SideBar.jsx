@@ -1,209 +1,124 @@
 import React, { useContext } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Divider } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  IconButton,
-  Hidden,
-  Box,
-  Avatar,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import PaymentIcon from '@mui/icons-material/Payment';
 import HistoryIcon from '@mui/icons-material/History';
-import MenuIcon from '@mui/icons-material/Menu';
-import LogoutIcon from '@mui/icons-material/Logout';
-import DocumentIcon from '@mui/icons-material/Description'; // New icon for Lease Agreements
-import { useState } from 'react';
+import DocumentIcon from '@mui/icons-material/Description';
 
-const drawerWidth = 280;
+const drawerWidth = 256;
 
-// Styled components for enhanced visual design
-const SidebarDrawer = styled(Drawer)(({ theme }) => ({
-  width: drawerWidth,
-  flexShrink: 0,
-  '& .MuiDrawer-paper': {
-    width: drawerWidth,
-    boxSizing: 'border-box',
-    backgroundColor: theme.palette.background.default,
-    borderRight: 'none',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-  },
-}));
-
-const StyledListItem = styled(ListItem)(({ theme, selected }) => ({
-  borderRadius: theme.spacing(1),
-  margin: theme.spacing(1, 0.5),
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
-    transform: 'translateX(5px)',
-  },
-  ...(selected && {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    '& .MuiListItemIcon-root': {
-      color: theme.palette.primary.contrastText,
-    },
-    '&:hover': {
-      backgroundColor: theme.palette.primary.dark,
-    },
-  }),
-}));
-
-const ProfileSection = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: theme.spacing(2),
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: theme.spacing(2),
-  margin: theme.spacing(2),
-  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-}));
-
-const Sidebar = () => {
-  const { user, logout } = useContext(AuthContext);
+const SideBar = () => {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const hasActiveLease = user?.currentLease;
+  const hasActiveLease = !!user?.currentLease;
+  console.log('SideBar Debug - User:', user);
+  console.log('SideBar Debug - Has Active Lease:', hasActiveLease);
 
   const menuItems = [
     {
       text: 'Dashboard',
       icon: <HomeIcon />,
-      path: '',
+      path: '/dashboard',
     },
     {
       text: 'Pay Rent',
       icon: <PaymentIcon />,
-      path: 'pay-rent',
+      path: '/dashboard/pay-rent',
       condition: hasActiveLease,
     },
     {
       text: 'Payment History',
       icon: <HistoryIcon />,
-      path: 'payment-history',
+      path: '/dashboard/payment-history',
     },
     {
-      text: 'Lease Agreements', // New menu item
+      text: 'Lease Agreements',
       icon: <DocumentIcon />,
-      path: 'lease-agreements',
-      condition: hasActiveLease, // Only show if tenant has an active lease
+      path: '/dashboard/lease-agreements',
+      condition: hasActiveLease,
     },
   ];
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
 
-  const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Profile Section */}
-      <ProfileSection>
-        <Avatar 
-          src={user?.avatar} 
-          alt={user?.name} 
-          sx={{ width: 56, height: 56, mr: 2 }}
-        />
-        <Box>
-          <Typography variant="h6" noWrap>
-            {user?.name || 'Tenant'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {user?.email || 'tenant@example.com'}
-          </Typography>
-        </Box>
-      </ProfileSection>
-
-      {/* Navigation List */}
-      <List sx={{ flexGrow: 1, px: 1 }}>
-        {menuItems.map((item) => {
-          if (item.condition === false) return null;
-          const isSelected = location.pathname.includes(item.path);
-          
-          return (
-            <StyledListItem
-              key={item.text}
-              component={Link}
-              to={`/dashboard/${item.path}`}
-              selected={isSelected}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </StyledListItem>
-          );
-        })}
-      </List>
-
-      {/* Logout Option */}
-      <Box sx={{ p: 2 }}>
-        <StyledListItem 
-          button 
-          onClick={logout}
-          sx={{ 
-            backgroundColor: 'error.light', 
-            color: 'error.contrastText' 
-          }}
-        >
-          <ListItemIcon>
-            <LogoutIcon />
-          </ListItemIcon>
-          <ListItemText primary="Logout" />
-        </StyledListItem>
-      </Box>
-    </Box>
-  );
   return (
-    <>
-      <Hidden smUp>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          onClick={handleDrawerToggle}
-          sx={{ 
-            position: 'fixed', 
-            top: 16, 
-            left: 16, 
-            zIndex: 1300,
-            backgroundColor: 'primary.main',
-            color: 'primary.contrastText',
-            '&:hover': {
-              backgroundColor: 'primary.dark'
-            }
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <SidebarDrawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-          }}
-        >
-          {drawer}
-        </SidebarDrawer>
-      </Hidden>
-      <Hidden xsDown>
-        <SidebarDrawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-          }}
-        >
-          {drawer}
-        </SidebarDrawer>
-      </Hidden>
-    </>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' }
+      }}
+    >
+      {/* Logo */}
+      <Box sx={{ px: 3, py: 3.5 }}>
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Box sx={{
+            width: 38, height: 38, borderRadius: 2.5,
+            background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
+          }}>
+            <Typography fontWeight={900} color="white" fontSize="1.1rem">P</Typography>
+          </Box>
+          <Box>
+            <Typography fontWeight={800} fontSize="1rem" sx={{ letterSpacing: 0.5, color: '#f1f5f9' }}>PropertySync</Typography>
+            <Typography variant="caption" color="textSecondary" sx={{ fontSize: '0.7rem' }}>Tenant Console</Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)', mx: 2 }} />
+
+      {/* Nav items */}
+      <Box sx={{ px: 1.5, pt: 2 }}>
+        <Typography variant="caption" color="textSecondary" sx={{ px: 1.5, letterSpacing: 2, fontSize: '0.65rem', textTransform: 'uppercase' }}>
+          Navigation
+        </Typography>
+        <List sx={{ mt: 1 }}>
+          {menuItems.map((item) => {
+            if (item.condition === false) return null;
+            const isActive = location.pathname === item.path || (item.path === '/dashboard' && location.pathname === '/dashboard/');
+            return (
+              <ListItemButton
+                key={item.text}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  borderRadius: 2.5, mb: 0.5, px: 2, py: 1.2, position: 'relative',
+                  background: isActive ? 'rgba(37, 99, 235, 0.18)' : 'transparent',
+                  border: isActive ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid transparent',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' },
+                  '& .MuiListItemIcon-root': { color: isActive ? '#60a5fa' : 'rgba(255,255,255,0.4)', minWidth: 40, transition: 'color 0.2s' },
+                  '& .MuiListItemText-primary': { color: isActive ? '#f1f5f9' : 'rgba(255,255,255,0.6)', fontWeight: isActive ? 700 : 500, fontSize: '0.9rem' },
+                }}
+              >
+                {isActive && (
+                  <Box sx={{
+                    position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+                    width: 3, height: '60%', borderRadius: '0 2px 2px 0',
+                    background: 'linear-gradient(to bottom, #2563eb, #60a5fa)',
+                  }} />
+                )}
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            );
+          })}
+        </List>
+      </Box>
+
+      {/* Footer badge */}
+      <Box sx={{ mt: 'auto', px: 2.5, py: 2.5 }}>
+        <Box sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)' }}>
+          <Typography variant="caption" color="textSecondary" display="block" mb={0.5}>Tenant Portal</Typography>
+          <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 600 }}>Active Status</Typography>
+        </Box>
+      </Box>
+    </Drawer>
   );
 };
 
-export default Sidebar;
+export default SideBar;

@@ -6,6 +6,7 @@ import App from './App';
 import theme from './theme';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import './index.css';
 
 // Create a root container
 const root = ReactDOM.createRoot(document.getElementById('root'));

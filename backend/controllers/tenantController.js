@@ -6,7 +6,22 @@ const mongoose = require('mongoose');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 exports.getProperties = async (req, res) => {
   try {
-    const properties = await Property.find({ available: true });
+    let query = { available: true };
+
+    // If tenant has an active lease, also include their current property in the results
+    if (req.user.currentLease) {
+      const lease = await Lease.findById(req.user.currentLease);
+      if (lease) {
+        query = { 
+          $or: [
+            { available: true }, 
+            { _id: lease.property }
+          ] 
+        };
+      }
+    }
+
+    const properties = await Property.find(query);
     res.json(properties);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -181,17 +196,43 @@ exports.getPaymentHistory = async (req, res) => {
 
 exports.getBalance = async (req, res) => {
   try {
-    // Implement logic to calculate and return tenant's available balance
-    const payments = await Payment.find({ tenant: req.user.id, status: 'completed' });
-    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-    const currentLease = await Lease.findOne({ tenant: req.user.id, status: 'active' });
-    const rentPerMonth = currentLease ? currentLease.rentAmount : 0;
-    const months = (new Date() - currentLease.startDate) / (1000 * 60 * 60 * 24 * 30);
-    const totalDue = rentPerMonth * Math.floor(months);
-    const balance = totalPaid - totalDue;
+    const currentLease = await Lease.findOne({ 
+      tenant: req.user.id || req.user._id, 
+      status: 'active' 
+    });
 
-    res.json({ balance });
+    if (!currentLease) {
+      return res.json({ balance: 0, pendingRent: 0, totalDue: 0 });
+    }
+
+    // Get all successful payments
+    const payments = await Payment.find({ 
+      tenant: req.user.id || req.user._id, 
+      status: 'completed' 
+    });
+    
+    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+    // Calculate months passed since lease started
+    const startDate = new Date(currentLease.startDate);
+    const today = new Date();
+    
+    const yearsDiff = today.getFullYear() - startDate.getFullYear();
+    const monthsDiff = today.getMonth() - startDate.getMonth();
+    const totalMonths = (yearsDiff * 12) + monthsDiff + 1; // +1 to include the current month
+
+    const rentPerMonth = currentLease.rentAmount || 0;
+    const totalDue = rentPerMonth * totalMonths;
+    const pendingRent = Math.max(0, totalDue - totalPaid);
+
+    res.json({ 
+      balance: totalPaid, 
+      pendingRent, 
+      totalDue,
+      monthlyRent: rentPerMonth
+    });
   } catch (err) {
+    console.error('Get balance error:', err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -213,9 +254,20 @@ exports.initiateRentPayment = async (req, res) => {
       payment_method_types: ['card'],
       metadata: {
         leaseId: lease._id.toString(),
-        userId: req.user.id
+        userId: req.user.id || req.user._id
       }
     });
+
+    // Create a pending payment record in the database
+    const pendingPayment = new Payment({
+      lease: lease._id,
+      tenant: req.user.id || req.user._id,
+      amount: amount,
+      paymentMethod: 'stripe',
+      status: 'pending',
+      stripePaymentIntentId: paymentIntent.id
+    });
+    await pendingPayment.save();
 
     res.json({ 
       clientSecret: paymentIntent.client_secret 
@@ -233,17 +285,24 @@ exports.confirmRentPayment = async (req, res) => {
     // Retrieve the PaymentIntent to verify details
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     
-    // Create payment record in your system
-    const payment = new Payment({
-      lease: paymentIntent.metadata.leaseId,
-      tenant: paymentIntent.metadata.userId,
-      amount: paymentIntent.amount / 100, // Convert back to dollars
-      paymentMethod: 'stripe',
-      status: paymentIntent.status === 'succeeded' ? 'completed' : 'failed',
-      stripePaymentIntentId: paymentIntentId
-    });
-
-    await payment.save();
+    // Find the existing pending payment record
+    const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntentId });
+    
+    if (payment) {
+      payment.status = paymentIntent.status === 'succeeded' ? 'completed' : 'failed';
+      await payment.save();
+    } else {
+      // Fallback: Create new if for some reason not found
+      const newPayment = new Payment({
+        lease: paymentIntent.metadata.leaseId,
+        tenant: paymentIntent.metadata.userId,
+        amount: paymentIntent.amount / 100,
+        paymentMethod: 'stripe',
+        status: paymentIntent.status === 'succeeded' ? 'completed' : 'failed',
+        stripePaymentIntentId: paymentIntentId
+      });
+      await newPayment.save();
+    }
 
     res.json({ 
       message: 'Payment processed', 

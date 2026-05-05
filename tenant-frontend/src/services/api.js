@@ -26,17 +26,11 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      if (error.response.status === 401) {
-        toast.error('Unauthorized. Please log in again.');
-        // Optionally, implement a logout mechanism here
-      } else if (error.response.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('An unexpected error occurred.');
-      }
-    } else {
-      toast.error('Network error. Please try again.');
+    // We let the components handle the errors to avoid double toasts
+    // Especially since many components have local error states/alerts
+    if (error.response && error.response.status === 401) {
+      // Standard 401 handling could stay here if we want global logout
+      // localStorage.clear(); 
     }
     return Promise.reject(error);
   }

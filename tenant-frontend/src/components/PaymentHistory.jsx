@@ -8,302 +8,238 @@ import {
   TableRow, 
   TableCell, 
   TableBody, 
-  Paper, 
   CircularProgress, 
   Box,
   Alert,
   Card,
   CardContent,
   Grid,
-  Chip
+  Chip,
+  styled
 } from '@mui/material';
 import axios from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
-import { toast } from 'react-toastify';
 import { 
   AttachMoney as MoneyIcon, 
   Receipt as ReceiptIcon, 
-  AccountBalance as BalanceIcon 
+  AccountBalance as BalanceIcon,
+  Timer as PendingIcon
 } from '@mui/icons-material';
 
-const PaymentSummaryCard = ({ balance, totalPayments, paymentCount }) => {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+const GlassCard = styled(Card)(({ theme }) => ({
+  background: 'rgba(15, 23, 42, 0.55)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.07)',
+  borderRadius: '20px',
+  color: '#f1f5f9',
+}));
 
-  const cardStyle = {
-    background: 'linear-gradient(145deg, #f0f4f8 0%, #e6eaf3 100%)',
-    boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
-    borderRadius: '16px',
-    transition: 'transform 0.3s ease',
-    '&:hover': {
-      transform: 'scale(1.02)'
-    }
-  };
-
-  return (
-    <Card sx={cardStyle}>
-      <CardContent>
-        <Typography 
-          variant="h5" 
-          gutterBottom 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            color: '#2c3e50',
-            fontWeight: 'bold' 
-          }}
-        >
-          <ReceiptIcon sx={{ mr: 2, color: '#3498db' }} />
-          Payment Overview
-        </Typography>
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <BalanceIcon sx={{ mr: 2, color: '#2ecc71' }} />
-              <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
-                Current Balance
-              </Typography>
-              <Chip 
-                label={formatCurrency(balance || 0)}
-                color={balance >= 0 ? 'success' : 'error'}
-                variant="outlined"
-              />
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <MoneyIcon sx={{ mr: 2, color: '#9b59b6' }} />
-              <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
-                Total Payments
-              </Typography>
-              <Typography variant="body1">
-                {formatCurrency(totalPayments)}
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <ReceiptIcon sx={{ mr: 2, color: '#f39c12' }} />
-              <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
-                Number of Payments
-              </Typography>
-              <Chip 
-                label={paymentCount} 
-                color="primary" 
-                size="small" 
-                variant="outlined" 
-              />
-            </Box>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-};
+const SummaryBox = ({ title, value, icon: Icon, color, subtext }) => (
+  <GlassCard sx={{ height: '100%' }}>
+    <CardContent>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+            {title}
+          </Typography>
+          <Typography variant="h4" sx={{ fontWeight: 800, mt: 1, color: '#f1f5f9' }}>
+            {value}
+          </Typography>
+          {subtext && (
+            <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mt: 0.5 }}>
+              {subtext}
+            </Typography>
+          )}
+        </Box>
+        <Box sx={{ p: 1.5, borderRadius: 2, background: `${color}15`, color: color }}>
+          <Icon />
+        </Box>
+      </Box>
+    </CardContent>
+  </GlassCard>
+);
 
 const PaymentHistoryPage = () => {
   const { user } = useContext(AuthContext);
   const [payments, setPayments] = useState([]);
+  const [balanceData, setBalanceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchPaymentData = async () => {
-      console.log('==== Frontend Debugging ====');
-      console.log('Full User Object:', user);
-      console.log('Current Lease:', user?.currentLease);
-
-      // Comprehensive lease ID extraction with multiple fallback methods
+    const fetchData = async () => {
       let leaseId = null;
-
-      // Method 1: Direct string ID
-      if (typeof user?.currentLease === 'string') {
-        leaseId = user.currentLease;
-      } 
-      // Method 2: ObjectId-like object
-      else if (user?.currentLease && typeof user.currentLease === 'object') {
-        leaseId = user.currentLease._id || user.currentLease.id;
-      }
-
-      console.log('Extracted Lease ID:', leaseId);
-      console.log('Lease ID Type:', typeof leaseId);
+      if (typeof user?.currentLease === 'string') leaseId = user.currentLease;
+      else if (user?.currentLease) leaseId = user.currentLease._id;
 
       if (!leaseId) {
         setLoading(false);
-        setError('No valid lease ID found');
-        toast.error('No active lease found. Please contact support.');
         return;
       }
 
       try {
-        // Fetch payment history
-        const historyResponse = await axios.get(`/tenants/payments/history/${leaseId}`);
-        setPayments(historyResponse.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('==== Full Error Details ====');
-        console.error('Error Object:', error);
-        console.error('Error Response:', error.response);
-        
-        const errorMessage = 
-          error.response?.data?.message || 
-          error.message ||
-          'Failed to load payment history';
-        
-        toast.error(errorMessage);
-        setError(errorMessage);
+        const [historyRes, balanceRes] = await Promise.all([
+          axios.get(`/tenants/payments/history/${leaseId}`),
+          axios.get('/tenants/payments/balance')
+        ]);
+        setPayments(historyRes.data);
+        setBalanceData(balanceRes.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load data');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchPaymentData();
+    fetchData();
   }, [user]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   if (loading) {
     return (
-      <Container>
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
-          minHeight="50vh"
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress color="primary" />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container>
-        <Alert severity="error">{error}</Alert>
+      <Container sx={{ mt: 4 }}>
+        <Alert severity="error" variant="filled" sx={{ borderRadius: 3 }}>
+          {error}
+        </Alert>
       </Container>
     );
   }
 
-  const tableStyle = {
-    '& .MuiTableHead-root': {
-      backgroundColor: '#f0f4f8',
-    },
-    '& .MuiTableRow-root:hover': {
-      backgroundColor: '#f5f5f5',
-      transition: 'background-color 0.3s ease',
-    }
-  };
+  if (!user?.currentLease) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Alert severity="info" variant="filled" sx={{ borderRadius: 3 }}>
+          No active lease found. Payment history will appear once a lease is assigned.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
-    <Container maxWidth="lg" sx={{ 
-      mt: 4, 
-      background: 'linear-gradient(to right, #f9fafc 0%, #f0f4f8 100%)',
-      minHeight: '100vh',
-      py: 4
-    }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <PaymentSummaryCard 
-            balance={payments.reduce((sum, payment) => sum + payment.amount, 0)}
-            totalPayments={payments.reduce((sum, payment) => sum + payment.amount, 0)}
-            paymentCount={payments.length}
+    <Container maxWidth="lg" sx={{ mt: 4, pb: 8 }}>
+      <Box sx={{ mb: 6 }}>
+        <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Payment History
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#94a3b8' }}>
+          Track your transactions and outstanding balance.
+        </Typography>
+      </Box>
+
+      <Grid container spacing={3} sx={{ mb: 6 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <SummaryBox 
+            title="Total Paid" 
+            value={formatCurrency(balanceData?.balance)} 
+            icon={MoneyIcon} 
+            color="#10b981"
+            subtext={`${payments.filter(p => p.status === 'completed').length} completed transactions`}
           />
         </Grid>
-        <Grid item xs={12} md={8}>
-          <Card 
-            sx={{
-              boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
-              borderRadius: '16px',
-              overflow: 'hidden'
-            }}
-          >
-            <CardContent>
-              <Typography 
-                variant="h4" 
-                gutterBottom 
-                sx={{ 
-                  color: '#2c3e50', 
-                  fontWeight: 'bold',
-                  borderBottom: '3px solid #3498db',
-                  pb: 1
-                }}
-              >
-                Payment History
-              </Typography>
-              {payments.length === 0 ? (
-                <Alert 
-                  severity="info" 
-                  sx={{ mt: 2 }}
-                >
-                  No payment history found.
-                </Alert>
-              ) : (
-                <TableContainer 
-                  component={Paper} 
-                  sx={tableStyle}
-                >
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        {['Date', 'Amount', 'Payment Method', 'Status'].map((header) => (
-                          <TableCell 
-                            key={header} 
-                            sx={{ 
-                              fontWeight: 'bold', 
-                              color: '#2c3e50',
-                              textTransform: 'uppercase'
-                            }}
-                          >
-                            {header}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {payments.map((payment) => (
-                        <TableRow key={payment._id}>
-                          <TableCell>
-                            {new Date(payment.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {formatCurrency(payment.amount)}
-                          </TableCell>
-                          <TableCell>
-                            {payment.paymentMethod.replace('_', ' ').toUpperCase()}
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                              color={
-                                payment.status === 'completed' 
-                                  ? 'success' 
-                                  : payment.status === 'failed' 
-                                  ? 'error' 
-                                  : 'default'
-                              }
-                              size="small"
-                              variant="outlined"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            </CardContent>
-          </Card>
+        <Grid item xs={12} sm={6} md={3}>
+          <SummaryBox 
+            title="Outstanding" 
+            value={formatCurrency(balanceData?.pendingRent)} 
+            icon={PendingIcon} 
+            color="#ef4444"
+            subtext="Unpaid dues"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <SummaryBox 
+            title="Monthly Rent" 
+            value={formatCurrency(balanceData?.monthlyRent)} 
+            icon={BalanceIcon} 
+            color="#3b82f6"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <SummaryBox 
+            title="Total Due" 
+            value={formatCurrency(balanceData?.totalDue)} 
+            icon={ReceiptIcon} 
+            color="#f59e0b"
+          />
         </Grid>
       </Grid>
+
+      <GlassCard elevation={0}>
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer component={Box}>
+            <Table>
+              <TableHead sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
+                <TableRow>
+                  {['Date', 'Amount', 'Method', 'Status'].map((h) => (
+                    <TableCell key={h} sx={{ color: '#94a3b8', fontWeight: 700, py: 2.5, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      {h}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {payments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center" sx={{ py: 6, color: '#64748b' }}>
+                      No transactions recorded yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  payments.map((payment) => (
+                    <TableRow key={payment._id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' } }}>
+                      <TableCell sx={{ color: '#f1f5f9', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        {new Date(payment.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: '#f1f5f9', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        {formatCurrency(payment.amount)}
+                      </TableCell>
+                      <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <Typography variant="body2" sx={{ color: '#94a3b8', textTransform: 'capitalize' }}>
+                          {payment.paymentMethod}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <Chip 
+                          label={payment.status}
+                          size="small"
+                          sx={{ 
+                            fontWeight: 700,
+                            fontSize: '0.7rem',
+                            textTransform: 'uppercase',
+                            bgcolor: 
+                              payment.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 
+                              payment.status === 'failed' ? 'rgba(239, 68, 68, 0.1)' : 
+                              'rgba(245, 158, 11, 0.1)',
+                            color: 
+                              payment.status === 'completed' ? '#10b981' : 
+                              payment.status === 'failed' ? '#ef4444' : 
+                              '#f59e0b',
+                            border: '1px solid',
+                            borderColor: 'inherit'
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </GlassCard>
     </Container>
   );
 };

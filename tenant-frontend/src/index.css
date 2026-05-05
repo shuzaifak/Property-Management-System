@@ -1,0 +1,73 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #080c14;
+  background-image:
+    radial-gradient(circle at 10% 40%, rgba(37, 99, 235, 0.12), transparent 30%),
+    radial-gradient(circle at 90% 20%, rgba(96, 165, 250, 0.07), transparent 25%);
+  background-attachment: fixed;
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(37, 99, 235, 0.18);
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #080c14; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+
+/* MUI Alert Glassmorphism */
+.MuiAlert-root {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #f1f5f9 !important;
+}
+
+.MuiAlert-standardError {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.MuiAlert-standardInfo {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.MuiAlert-standardSuccess {
+  border-left: 4px solid #10b981 !important;
+}
+
+.MuiAlert-standardWarning {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.MuiAlert-icon {
+  color: inherit !important;
+}

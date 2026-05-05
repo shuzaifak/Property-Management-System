@@ -1,232 +1,70 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Alert, 
-  Container, 
-  Paper,
-  ThemeProvider,
-  createTheme
+import {
+  Box, Card, CardContent, Typography, TextField, Button,
+  Alert
 } from '@mui/material';
-import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-
-// Custom theme (reusing the theme from login page)
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Deep blue
-      light: '#42a5f5',
-      dark: '#1565c0',
-    },
-    background: {
-      default: '#f0f2f5',
-    },
-  },
-  typography: {
-    fontFamily: 'Roboto, Arial, sans-serif',
-  },
-  components: {
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& label.Mui-focused': {
-            color: '#1976d2',
-          },
-          '& .MuiOutlinedInput-root': {
-            '&.Mui-focused fieldset': {
-              borderColor: '#1976d2',
-            },
-          },
-        },
-      },
-    },
-  },
-});
+import { useNavigate } from 'react-router-dom';
 
 const OwnerRegisterPage = () => {
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'owner'
+  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleRegister = async () => {
-    // Basic validation
-    if (!name || !email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
     try {
-      const { data } = await api.post('/users/register', { 
-        name, 
-        email, 
-        password, 
-        role: 'owner' // Hardcoded role as owner
-      });
-      
-      // Clear any previous errors
-      setError('');
-      
-      // Set success message with user info from response
-      setSuccess(`Registration successful for ${data.user.name}. Redirecting to login...`);
-      
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
+      await api.post('/users/register', formData);
+      setSuccess('Registration successful! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      // More detailed error handling
-      const errorMsg = err.response?.data?.message || 'Registration failed';
-      setError(errorMsg);
-      setSuccess('');
+      setError(err.response?.data?.message || 'Registration failed');
     }
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Box 
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-          backgroundColor: theme.palette.background.default,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Container maxWidth="xs">
-          <Paper 
-            elevation={6} 
-            sx={{ 
-              marginTop: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: 4,
-              borderRadius: 3,
-            }}
-          >
-            <Box 
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                width: '100%',
-              }}
-            >
-              <PersonAddOutlinedIcon 
-                sx={{ 
-                  fontSize: 60, 
-                  color: theme.palette.primary.main,
-                  marginBottom: 2,
-                }} 
-              />
-              <Typography 
-                component="h1" 
-                variant="h5" 
-                sx={{ 
-                  marginBottom: 2,
-                  fontWeight: 600,
-                }}
-              >
-                Owner Registration
-              </Typography>
-
-              {error && (
-                <Alert 
-                  severity="error" 
-                  sx={{ 
-                    width: '100%', 
-                    marginBottom: 2,
-                  }}
-                >
-                  {error}
-                </Alert>
-              )}
-
-              {success && (
-                <Alert 
-                  severity="success" 
-                  sx={{ 
-                    width: '100%', 
-                    marginBottom: 2,
-                  }}
-                >
-                  {success}
-                </Alert>
-              )}
-
-              <Box component="form" sx={{ width: '100%' }}>
-                <TextField 
-                  label="Full Name" 
-                  variant="outlined" 
-                  fullWidth 
-                  margin="normal"
-                  value={name} 
-                  onChange={e => setName(e.target.value)} 
-                  required
-                />
-                <TextField 
-                  label="Email" 
-                  variant="outlined" 
-                  fullWidth 
-                  margin="normal"
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)} 
-                  required
-                  type="email"
-                />
-                <TextField 
-                  label="Password" 
-                  variant="outlined" 
-                  type="password" 
-                  fullWidth 
-                  margin="normal"
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  required
-                />
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  fullWidth 
-                  sx={{ 
-                    marginTop: 2,
-                    padding: 1.5,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                  }}
-                  onClick={handleRegister}
-                >
-                  Register
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
-                  fullWidth 
-                  sx={{ 
-                    marginTop: 2,
-                    padding: 1.5,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                  }}
-                  onClick={() => navigate('/login')}
-                >
-                  Back to Login
-                </Button>
-              </Box>
+    <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Card className="glass-card" sx={{ width: 420, p: 2 }}>
+        <CardContent>
+          <Box display="flex" flexDirection="column" alignItems="center" mb={4}>
+            <Box sx={{
+              width: 60, height: 60, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1d4ed8, #60a5fa)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              mb: 2, boxShadow: '0 8px 24px rgba(37,99,235,0.4)'
+            }}>
+              <Typography variant="h4" color="white" fontWeight="bold">P</Typography>
             </Box>
-          </Paper>
-        </Container>
-      </Box>
-    </ThemeProvider>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#f1f5f9' }}>Owner Registration</Typography>
+            <Typography variant="body2" color="textSecondary">Create an account to list your properties</Typography>
+          </Box>
+
+          {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{success}</Alert>}
+
+          <TextField label="Full Name" name="name" variant="outlined" fullWidth sx={{ mb: 3 }} value={formData.name} onChange={handleChange} />
+          <TextField label="Email Address" name="email" variant="outlined" fullWidth sx={{ mb: 3 }} value={formData.email} onChange={handleChange} />
+          <TextField label="Password" name="password" variant="outlined" type="password" fullWidth sx={{ mb: 4 }} value={formData.password} onChange={handleChange} />
+
+          <Button variant="contained" color="primary" fullWidth onClick={handleRegister}
+            sx={{ mb: 2, py: 1.5, fontSize: '1rem', background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)' }}>
+            Register Now
+          </Button>
+          <Button variant="text" fullWidth onClick={() => navigate('/login')} sx={{ color: '#60a5fa' }}>
+            Already have an account? Sign In
+          </Button>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

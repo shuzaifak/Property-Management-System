@@ -7,10 +7,10 @@ const MainLayout = ({ children }) => {
   return (
     <Box display="flex">
       <Sidebar />
-      <Box flexGrow={1} bgcolor="#f4f6f8">
+      <Box flexGrow={1}>
         <Topbar />
         <Toolbar />
-        <Box padding={3}>{children}</Box>
+        <Box padding={4} sx={{ position: 'relative', zIndex: 1 }}>{children}</Box>
       </Box>
     </Box>
   );

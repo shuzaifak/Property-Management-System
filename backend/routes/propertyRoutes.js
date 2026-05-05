@@ -8,7 +8,8 @@ const {
   updateProperty, 
   addTenantToProperty ,
   deleteProperty ,
-  getOwnerPaymentHistory
+  getOwnerPaymentHistory,
+  contactOwner
 }  = require('../controllers/propertyController');
 const { protect, requireRole } = require('../middlewares/authMiddleware');
 const multer = require('multer');
@@ -47,4 +48,5 @@ router.delete('/:id', protect, requireRole(['admin', 'owner']), deleteProperty);
 router.get('/owner', protect, requireRole(['owner']), getOwnerProperties);
 router.post('/add-tenant', protect, requireRole(['owner']), addTenantToProperty);
 router.get('/owner-payment-history', protect, requireRole(['owner']), getOwnerPaymentHistory);
+router.post('/contact-owner', protect, requireRole(['tenant']), contactOwner);
 module.exports = router;

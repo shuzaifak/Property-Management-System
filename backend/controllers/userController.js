@@ -1,14 +1,3 @@
-// backend/controllers/userController.js
-const crypto = require('crypto');
-
-try {
-  const token = crypto.randomBytes(16).toString('hex');
-  // Proceed with token creation or other logic
-} catch (err) {
-  console.error('Error generating token:', err);
-  res.status(500).json({ message: 'Something went wrong. Please try again later.' });
-}
-
 const User = require('../models/User');
 const { generateToken } = require('../utils/tokenService');
 const { sendEmail } = require('../utils/emailService');
@@ -22,8 +11,24 @@ exports.register = async (req, res) => {
 
     user = new User({ name, email, password, role });
     await user.save();
+    // Find user and populate lease info for immediate UI feedback
+    const populatedUser = await User.findById(user._id).populate({
+      path: 'currentLease',
+      populate: { path: 'property' }
+    });
+
     const token = generateToken(user);
-    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role }, token });
+    res.json({ 
+      user: { 
+        id: populatedUser._id, 
+        name: populatedUser.name, 
+        email: populatedUser.email, 
+        role: populatedUser.role, 
+        avatar: populatedUser.avatar, 
+        currentLease: populatedUser.currentLease 
+      }, 
+      token 
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -38,7 +43,24 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = generateToken(user);
-    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role }, token });
+    
+    // Populate user info for frontend
+    const populatedUser = await User.findById(user._id).populate({
+      path: 'currentLease',
+      populate: { path: 'property' }
+    });
+
+    res.json({ 
+      user: { 
+        id: populatedUser._id, 
+        name: populatedUser.name, 
+        email: populatedUser.email, 
+        role: populatedUser.role, 
+        avatar: populatedUser.avatar, 
+        currentLease: populatedUser.currentLease 
+      }, 
+      token 
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -61,19 +83,22 @@ exports.forgotPassword = async (req, res) => {
     const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     // Send email
-    const emailText = `
-      You are receiving this email because you (or someone else) has requested a password reset.
-      Please click on the following link to reset your password:
-      ${resetURL}
-
-      If you did not request this, please ignore this email.
-      This link will expire in 10 minutes.
+    const emailHtml = `
+      <h3>Password Reset Request</h3>
+      <p>Hello ${user.name},</p>
+      <p>You are receiving this email because you (or someone else) has requested a password reset for your Property Sync account.</p>
+      <div class="info-box">
+        <p>Please click on the following link to reset your password:</p>
+        <a href="${resetURL}" class="button">Reset Password</a>
+      </div>
+      <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+      <p>This link will expire in 10 minutes for your security.</p>
     `;
 
     await sendEmail(
       user.email, 
       'Password Reset Request', 
-      emailText
+      emailHtml
     );
 
     res.status(200).json({ message: 'Password reset email sent' });
@@ -138,8 +163,10 @@ exports.uploadAvatar = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Allow both 'admin' and 'owner' roles to upload avatars
-    if (user.role !== 'admin' && user.role !== 'owner') {
+    // The requireRole middleware already handles role-based access
+    // But we can keep a safety check or just remove it.
+    // Let's ensure 'tenant' is included if we keep it.
+    if (user.role !== 'admin' && user.role !== 'owner' && user.role !== 'tenant') {
       return res.status(403).json({ message: 'Not authorized.' });
     }
 
@@ -162,7 +189,10 @@ exports.uploadAvatar = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('currentLease');
+    const user = await User.findById(req.user._id).populate({
+      path: 'currentLease',
+      populate: { path: 'property' }
+    });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
@@ -170,3 +200,45 @@ exports.getMe = async (req, res) => {
   }
 };
 
+// Admin: Create a new user
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    let existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: 'User already exists' });
+    const user = new User({ name, email, password, role });
+    await user.save();
+    res.status(201).json({ id: user._id, name: user.name, email: user.email, role: user.role });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Admin: Update a user
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+    const user = await User.findByIdAndUpdate(
+      id,
+      { name, email, role },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Admin: Delete a user
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

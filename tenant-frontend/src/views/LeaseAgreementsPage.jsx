@@ -127,18 +127,18 @@ const LeaseAgreementsPage = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#f1f5f9' }}>
         Current Lease Agreement
       </Typography>
 
       {lease ? (
-        <Card>
+        <Card className="glass-card" elevation={0}>
           <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Box display="flex" alignItems="center" mb={2}>
                   <HomeWork sx={{ mr: 2, color: 'primary.main' }} />
-                  <Typography variant="subtitle1" color="text.secondary">
+                  <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.5)' }}>
                     Property Address
                   </Typography>
                 </Box>
@@ -149,7 +149,7 @@ const LeaseAgreementsPage = () => {
               <Grid item xs={12} sm={6}>
                 <Box display="flex" alignItems="center" mb={2}>
                   <DateRange sx={{ mr: 2, color: 'primary.main' }} />
-                  <Typography variant="subtitle1" color="text.secondary">
+                  <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.5)' }}>
                     Lease Period
                   </Typography>
                 </Box>
@@ -160,7 +160,7 @@ const LeaseAgreementsPage = () => {
               <Grid item xs={12} sm={6}>
                 <Box display="flex" alignItems="center" mb={2}>
                   <MonetizationOn sx={{ mr: 2, color: 'primary.main' }} />
-                  <Typography variant="subtitle1" color="text.secondary">
+                  <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.5)' }}>
                     Monthly Rent
                   </Typography>
                 </Box>
@@ -169,7 +169,7 @@ const LeaseAgreementsPage = () => {
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle1" color="text.secondary">
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.5)' }}>
                   Lease Status
                 </Typography>
                 <Typography 
