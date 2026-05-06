@@ -133,23 +133,42 @@ const Users = () => {
   const getAvatarColor = (id) => avatarColors[(id?.charCodeAt(0) || 0) % avatarColors.length];
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 1, sm: 0 } }}>
       {/* Header */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
-        <Box display="flex" alignItems="center" gap={2}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        justifyContent: 'space-between', 
+        gap: 2, 
+        mb: 4 
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ p: 1.5, borderRadius: 3, background: 'rgba(123, 44, 191, 0.15)', border: '1px solid rgba(123,44,191,0.3)' }}>
-            <PeopleAltIcon sx={{ color: '#3b82f6', fontSize: 28 }} />
+            <PeopleAltIcon sx={{ color: '#3b82f6', fontSize: { xs: 24, sm: 28 } }} />
           </Box>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>User Management</Typography>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 800, 
+              fontSize: { xs: '1.5rem', sm: '2.125rem' } 
+            }}>
+              User Management
+            </Typography>
             <Typography variant="body2" color="textSecondary">{filtered.length} users total</Typography>
           </Box>
         </Box>
         <Button
           variant="contained"
+          fullWidth={{ xs: true, sm: false }}
           startIcon={<AddIcon />}
           onClick={openCreate}
-          sx={{ background: 'linear-gradient(135deg, #2563eb, #3b82f6)', boxShadow: '0 4px 20px rgba(37,99,235,0.4)', borderRadius: 3, px: 3 }}
+          sx={{ 
+            background: 'linear-gradient(135deg, #2563eb, #3b82f6)', 
+            boxShadow: '0 4px 20px rgba(37,99,235,0.4)', 
+            borderRadius: 3, 
+            px: 3,
+            py: { xs: 1.2, sm: 1 } 
+          }}
         >
           Add User
         </Button>

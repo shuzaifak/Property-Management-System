@@ -10,6 +10,8 @@ import { AuthContext } from './context/AuthContext';
 import ManageTenantsPage from './pages/ManageTenantsPage';
 import LeaseAgreementsPage from './pages/LeaseAgreementsPage';
 import OwnerPaymentHistory from './pages/OwnerPaymentHistory';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function App() {
   const { isAuthenticated } = useContext(AuthContext);
@@ -18,6 +20,8 @@ function App() {
     <Routes>
       <Route path="/login" element={<OwnerLoginPage />} />
       <Route path="/register" element={<OwnerRegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/" element={isAuthenticated ? <OwnerDashboardPage /> : <Navigate to="/login" />} />
       <Route path="/properties" element={isAuthenticated ? <PropertiesPage /> : <Navigate to="/login" />} />
       <Route path="/add-property" element={isAuthenticated ? <AddPropertyPage /> : <Navigate to="/login" />} />

@@ -8,18 +8,33 @@ import {
   DialogActions, 
   Box, 
   Avatar, 
-  Container, 
   Card, 
   CardContent, 
-  CardMedia,
-  IconButton
+  IconButton,
+  Grid,
+  Divider,
+  Stack
 } from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import EditIcon from '@mui/icons-material/Edit';
-import CloseIcon from '@mui/icons-material/Close';
+import { styled } from '@mui/material/styles';
+import { 
+  CloudUpload as CloudUploadIcon, 
+  Close as CloseIcon,
+  Email as EmailIcon,
+  Badge as BadgeIcon,
+  CalendarToday as DateIcon,
+  CameraAlt as CameraIcon
+} from '@mui/icons-material';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../utils/api';
+
+const GlassCard = styled(Card)(({ theme }) => ({
+  background: 'rgba(15, 23, 42, 0.45)',
+  backdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: '24px',
+  color: '#f1f5f9',
+  overflow: 'hidden'
+}));
 
 const ProfileUpdate = () => {
   const { ownerUser, updateUser } = useContext(AuthContext);
@@ -29,27 +44,21 @@ const ProfileUpdate = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     setSelectedFile(file);
-    
-    // Create preview URL
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result);
-    };
+    reader.onloadend = () => setPreviewUrl(reader.result);
     reader.readAsDataURL(file);
   };
 
   const handleUpload = async () => {
     if (!selectedFile) return;
-    
     const formData = new FormData();
     formData.append('avatar', selectedFile);
-    
     try {
       const res = await api.post('/users/upload-avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
       const updated = res.data.user;
       localStorage.setItem('ownerUser', JSON.stringify(updated));
       updateUser(updated);
@@ -61,183 +70,190 @@ const ProfileUpdate = () => {
     }
   };
 
-  // Subtle hover and focus animations
-  const ProfileCard = styled(Card)(({ theme }) => ({
-    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-    '&:hover': {
-      transform: 'scale(1.02)',
-      boxShadow: theme.shadows[12]
-    }
-  }));
-
-  // Pulsate animation for edit button
-  const pulsate = keyframes`
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-    }
-  `;
-
-  const EditButton = styled(IconButton)(({ theme }) => ({
-    position: 'absolute',
-    bottom: theme.spacing(1),
-    right: theme.spacing(1),
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    '&:hover': {
-      backgroundColor: theme.palette.primary.dark,
-      animation: `${pulsate} 1s infinite`
-    }
-  }));
+  const InfoRow = ({ icon: Icon, label, value }) => (
+    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+      <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+        <Icon fontSize="small" />
+      </Box>
+      <Box>
+        <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, display: 'block' }}>
+          {label}
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#f1f5f9', fontWeight: 600 }}>
+          {value}
+        </Typography>
+      </Box>
+    </Box>
+  );
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        mt: 4 
-      }}>
-        <ProfileCard sx={{ 
-          maxWidth: 400, 
-          width: '100%', 
-          position: 'relative',
-          overflow: 'visible'
+    <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+      <Box sx={{ mb: 4, px: { xs: 1, sm: 0 } }}>
+        <Typography variant="h4" sx={{ 
+          fontWeight: 900, 
+          mb: 1, 
+          background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent',
+          fontSize: { xs: '1.75rem', sm: '2.5rem' } 
         }}>
-          <CardMedia
-            component="div"
-            sx={{
-              height: 200,
-              position: 'relative',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            }}
-          >
-            <Box sx={{
-              position: 'absolute',
-              bottom: -50,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              border: '4px solid white',
-              borderRadius: '50%',
-              boxShadow: 3
-            }}>
-              <Avatar
-                alt="Owner Avatar"
-                src={ownerUser?.avatar || 'https://via.placeholder.com/150'}
-                sx={{ 
-                  width: 120, 
-                  height: 120,
-                }}
-              />
-              <EditButton 
-                size="small" 
-                onClick={() => setOpenDialog(true)}
-              >
-                <EditIcon fontSize="small" />
-              </EditButton>
-            </Box>
-          </CardMedia>
+          Owner Profile
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#94a3b8' }}>Manage your personal information and profile settings.</Typography>
+      </Box>
 
-          <CardContent sx={{ 
-            mt: 7, 
-            textAlign: 'center',
-            pb: 2 
-          }}>
-            <Typography variant="h6" color="text.primary">
-              {ownerUser?.name}
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Profile Settings
-            </Typography>
-          </CardContent>
-        </ProfileCard>
-
-        <Dialog 
-          open={openDialog} 
-          onClose={() => setOpenDialog(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle>
-            Change Profile Picture
-            <IconButton
-              onClick={() => setOpenDialog(false)}
-              sx={{ 
-                position: 'absolute', 
-                right: 8, 
-                top: 8 
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          
-          <DialogContent dividers>
+      <Grid container spacing={4}>
+        {/* Profile Card */}
+        <Grid item xs={12} md={5}>
+          <GlassCard sx={{ height: '100%', position: 'relative' }}>
             <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              gap: 2 
+              height: 140, 
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              position: 'relative'
             }}>
-              {previewUrl && (
-                <Avatar
-                  alt="Preview"
-                  src={previewUrl}
-                  sx={{ 
-                    width: 150, 
-                    height: 150, 
-                    mb: 2 
-                  }}
-                />
-              )}
+              <Box sx={{ 
+                position: 'absolute', 
+                bottom: -50, 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                zIndex: 2
+              }}>
+                <Box sx={{ position: 'relative' }}>
+                  <Avatar
+                    src={ownerUser?.avatar}
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      border: '4px solid #080c14',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                      bgcolor: '#3b82f6',
+                      fontSize: '3rem',
+                      fontWeight: 800
+                    }}
+                  >
+                    {!ownerUser?.avatar && ownerUser?.name?.[0]}
+                  </Avatar>
+                  <IconButton 
+                    onClick={() => setOpenDialog(true)}
+                    sx={{ 
+                      position: 'absolute', 
+                      bottom: 0, 
+                      right: 0, 
+                      bgcolor: '#3b82f6', 
+                      color: 'white',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      '&:hover': { bgcolor: '#2563eb' }
+                    }}
+                    size="small"
+                  >
+                    <CameraIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            </Box>
+            <CardContent sx={{ pt: 8, textAlign: 'center', pb: 4 }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#f1f5f9', mb: 0.5 }}>
+                {ownerUser?.name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#3b82f6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                Verified Property Owner
+              </Typography>
               
-              <Button
-                variant="contained"
-                component="label"
-                startIcon={<CloudUploadIcon />}
-              >
-                Select Image
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-              </Button>
+              <Divider sx={{ my: 3, opacity: 0.1 }} />
               
-              {selectedFile && (
-                <Typography variant="body2" color="text.secondary">
-                  Selected: {selectedFile.name}
+              <Stack spacing={1} alignItems="center">
+                <Box sx={{ px: 2, py: 0.5, borderRadius: 5, bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'currentColor' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 800 }}>ACTIVE ACCOUNT</Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </GlassCard>
+        </Grid>
+
+        {/* Details Card */}
+        <Grid item xs={12} md={7}>
+          <GlassCard sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 4 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#f1f5f9', mb: 4, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                Account Information
+              </Typography>
+              
+              <InfoRow icon={BadgeIcon} label="Full Name" value={ownerUser?.name} />
+              <InfoRow icon={EmailIcon} label="Email Address" value={ownerUser?.email} />
+              <InfoRow icon={BadgeIcon} label="Account Role" value="Property Owner" />
+              <InfoRow 
+                icon={DateIcon} 
+                label="Member Since" 
+                value={ownerUser?.createdAt ? new Date(ownerUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'May 2026'} 
+              />
+              
+              <Box sx={{ mt: 2, p: 2, borderRadius: 3, bgcolor: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+                <Typography variant="body2" sx={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <strong>Security Note:</strong> Contact administration to change your official email or role.
                 </Typography>
+              </Box>
+            </CardContent>
+          </GlassCard>
+        </Grid>
+      </Grid>
+
+      {/* Avatar Dialog */}
+      <Dialog 
+        open={openDialog} 
+        onClose={() => setOpenDialog(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4, bgcolor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', color: '#f1f5f9' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Update Profile Picture
+          <IconButton onClick={() => setOpenDialog(false)} sx={{ color: '#94a3b8' }}><CloseIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.05)', py: 4 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <Box sx={{ position: 'relative' }}>
+              <Avatar
+                src={previewUrl || ownerUser?.avatar}
+                sx={{ width: 160, height: 160, border: '4px solid #1e293b', boxShadow: 4 }}
+              />
+              {previewUrl && (
+                <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 800 }}>PREVIEW</Typography>
+                </Box>
               )}
             </Box>
-          </DialogContent>
-          
-          <DialogActions>
-            <Button 
-              color="primary" 
-              onClick={() => setOpenDialog(false)}
+            
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<CloudUploadIcon />}
+              sx={{ borderRadius: 3, px: 4, borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
             >
-              Cancel
+              Select New Image
+              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
             </Button>
             
-            <Button 
-              variant="contained" 
-              onClick={handleUpload}
-              disabled={!selectedFile}
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-    </Container>
+            {selectedFile && (
+              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                Selected: {selectedFile.name}
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setOpenDialog(false)} sx={{ color: '#94a3b8' }}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleUpload} 
+            disabled={!selectedFile}
+            sx={{ borderRadius: 3, px: 4, bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' } }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

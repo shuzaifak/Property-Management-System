@@ -1,86 +1,101 @@
-// ResetPasswordPage.js
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Typography, 
-  TextField, 
-  Button, 
-  Alert 
+import {
+  Box, Card, CardContent, Typography, TextField, Button,
+  Alert, IconButton, InputAdornment
 } from '@mui/material';
-import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Visibility as VisibilityIcon, 
+  VisibilityOff as VisibilityOffIcon,
+  Lock as LockIcon
+} from '@mui/icons-material';
 import api from '../utils/api';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const ResetPasswordPage = () => {
+  const { token } = useParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { token } = useParams();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleResetPassword = async () => {
-    // Validate passwords match
+  const handleReset = async (e) => {
+    e.preventDefault();
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+      return setError('Passwords do not match');
     }
-  
+    setLoading(true);
+    setError('');
     try {
       await api.post(`/users/reset-password/${token}`, { password });
-      setSuccess('Password reset successful');
-      
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      setSuccess('Password reset successfully! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Password reset failed');
+      setError(err.response?.data?.message || 'Token is invalid or has expired.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Box 
-      display="flex" 
-      justifyContent="center" 
-      alignItems="center" 
-      height="100vh" 
-      bgcolor="#f4f6f8"
-    >
-      <Card sx={{ width: 400 }}>
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" sx={{ bgcolor: '#080c14' }}>
+      <Card className="glass-card" sx={{ width: '100%', maxWidth: 420, mx: 2, p: 2 }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Reset Password
-          </Typography>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-          <TextField 
-            label="New Password" 
-            type="password"
-            variant="outlined" 
-            fullWidth 
-            sx={{ mb: 2 }}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <TextField 
-            label="Confirm New Password" 
-            type="password"
-            variant="outlined" 
-            fullWidth 
-            sx={{ mb: 2 }}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <Button 
-            variant="contained" 
-            color="primary" 
-            fullWidth 
-            onClick={handleResetPassword}
-          >
-            Reset Password
-          </Button>
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: '#f1f5f9' }}>Reset Admin Password</Typography>
+            <Typography variant="body2" color="textSecondary">Please enter your new administrator password below.</Typography>
+          </Box>
+
+          {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{success}</Alert>}
+
+          <form onSubmit={handleReset}>
+            <TextField
+              label="New Password"
+              variant="outlined"
+              fullWidth
+              required
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{ mb: 3 }}
+              InputProps={{
+                startAdornment: <LockIcon sx={{ color: '#64748b', mr: 1 }} fontSize="small" />,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{ color: '#64748b' }}>
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="Confirm New Password"
+              variant="outlined"
+              fullWidth
+              required
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              sx={{ mb: 4 }}
+              InputProps={{
+                startAdornment: <LockIcon sx={{ color: '#64748b', mr: 1 }} fontSize="small" />,
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={loading}
+              sx={{ py: 1.5, fontSize: '1rem', background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)' }}
+            >
+              {loading ? 'Updating Password...' : 'Reset Password'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </Box>

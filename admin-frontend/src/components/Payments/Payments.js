@@ -48,14 +48,25 @@ const Payments = () => {
   }, [search, payments]);
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 1, sm: 0 } }}>
       {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={4}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: 2, 
+        mb: 4 
+      }}>
         <Box sx={{ p: 1.5, borderRadius: 3, background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37,99,235,0.3)' }}>
-          <PaymentsIcon sx={{ color: '#3b82f6', fontSize: 28 }} />
+          <PaymentsIcon sx={{ color: '#3b82f6', fontSize: { xs: 24, sm: 28 } }} />
         </Box>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800 }}>Payment History</Typography>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 800, 
+            fontSize: { xs: '1.5rem', sm: '2.125rem' } 
+          }}>
+            Payment History
+          </Typography>
           <Typography variant="body2" color="textSecondary">
             {filtered.length} total transaction{filtered.length !== 1 && 's'}
           </Typography>
@@ -67,19 +78,41 @@ const Payments = () => {
       {/* Search */}
       <TextField
         fullWidth
-        placeholder="Search by tenant name, email, property title, or transaction ID..."
+        placeholder="Search payments..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' } }}
-        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: 'rgba(255,255,255,0.4)' }} /></InputAdornment> }}
+        sx={{ 
+          mb: 3, 
+          '& .MuiOutlinedInput-root': { 
+            borderRadius: 3, 
+            bgcolor: 'rgba(255,255,255,0.04)', 
+            border: '1px solid rgba(255,255,255,0.08)' 
+          } 
+        }}
+        InputProps={{ 
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: 'rgba(255,255,255,0.4)' }} />
+            </InputAdornment>
+          ) 
+        }}
       />
 
       {/* Table */}
       {loading ? (
         <Box display="flex" justifyContent="center" py={8}><CircularProgress sx={{ color: '#2563eb' }} /></Box>
       ) : (
-        <TableContainer component={Paper} className="glass-card" sx={{ borderRadius: 4, overflow: 'hidden' }}>
-          <Table>
+        <TableContainer 
+          component={Paper} 
+          className="glass-card" 
+          sx={{ 
+            borderRadius: 4, 
+            overflowX: 'auto',
+            width: '100%',
+            display: 'block'
+          }}
+        >
+          <Table sx={{ minWidth: 800, tableLayout: 'auto' }}>
             <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.2)' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, color: 'text.secondary', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Date</TableCell>
@@ -111,7 +144,7 @@ const Payments = () => {
                     </TableCell>
                     <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <Typography variant="body2" fontWeight={600}>{p.propertyId?.title || 'Unknown Property'}</Typography>
-                      <Typography variant="caption" color="textSecondary" noWrap sx={{ maxWidth: 150, display: 'block' }}>
+                      <Typography variant="caption" color="textSecondary" noWrap sx={{ maxWidth: { xs: 100, sm: 150 }, display: 'block' }}>
                         {p.propertyId?.address}
                       </Typography>
                     </TableCell>

@@ -6,6 +6,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import PaymentIcon from '@mui/icons-material/Payment';
 import HistoryIcon from '@mui/icons-material/History';
 import DocumentIcon from '@mui/icons-material/Description';
+import PersonIcon from '@mui/icons-material/Person';
 
 const drawerWidth = 256;
 
@@ -38,6 +39,11 @@ const SideBar = ({ mobileOpen, handleDrawerToggle }) => {
       icon: <DocumentIcon />,
       path: '/dashboard/lease-agreements',
       condition: hasActiveLease,
+    },
+    {
+      text: 'My Profile',
+      icon: <PersonIcon />,
+      path: '/dashboard/profile',
     },
   ];
 

@@ -64,8 +64,8 @@ const PropertyTable = ({ properties, setProperties }) => {
   };
 
   return (
-    <TableContainer component={Paper} className="glass-panel" elevation={0} sx={{ border: 'none' }}>
-      <Table sx={{ minWidth: 650 }}>
+    <TableContainer component={Paper} className="glass-panel" elevation={0} sx={{ border: 'none', overflowX: 'auto' }}>
+      <Table sx={{ minWidth: { xs: 500, sm: 650 } }}>
         <TableHead>
           <TableRow>
             <TableCell sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: 1 }}>Title</TableCell>

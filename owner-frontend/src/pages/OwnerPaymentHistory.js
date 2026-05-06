@@ -89,13 +89,31 @@ const OwnerPaymentHistory = () => {
 
   return (
     <MainLayout>
-      <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Box sx={{ flexGrow: 1, px: { xs: 1, sm: 0 }, py: 3 }}>
         {/* Header Section */}
-        <Box mb={4}>
-          <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Financial Overview
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#94a3b8' }}>Monitor payments, revenue, and outstanding tenant balances.</Typography>
+        <Box sx={{ 
+          mb: 4,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 2
+        }}>
+          <Box>
+            <Typography variant="h3" sx={{ 
+              fontWeight: 900, 
+              mb: 1, 
+              background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent',
+              fontSize: { xs: '1.75rem', sm: '3rem' }
+            }}>
+              Financial Overview
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#94a3b8', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+              Monitor payments, revenue, and outstanding tenant balances.
+            </Typography>
+          </Box>
         </Box>
 
         {/* Stats Cards */}
@@ -109,7 +127,7 @@ const OwnerPaymentHistory = () => {
                   </Box>
                   <Box>
                     <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Total Transactions</Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#f1f5f9' }}>{stats.totalPayments}</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#f1f5f9', fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>{stats.totalPayments}</Typography>
                   </Box>
                 </Stack>
               </CardContent>
@@ -124,7 +142,7 @@ const OwnerPaymentHistory = () => {
                   </Box>
                   <Box>
                     <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Total Revenue</Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#10b981' }}>${stats.totalAmount.toLocaleString()}</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#10b981', fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>${stats.totalAmount.toLocaleString()}</Typography>
                   </Box>
                 </Stack>
               </CardContent>
@@ -139,7 +157,7 @@ const OwnerPaymentHistory = () => {
                   </Box>
                   <Box>
                     <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>Total Outstanding</Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#ef4444' }}>${stats.totalOutstanding.toLocaleString()}</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#ef4444', fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>${stats.totalOutstanding.toLocaleString()}</Typography>
                   </Box>
                 </Stack>
               </CardContent>
@@ -152,8 +170,18 @@ const OwnerPaymentHistory = () => {
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <ErrorOutlineIcon color="error" /> Outstanding Tenant Dues
           </Typography>
-          <TableContainer component={Paper} className="glass-panel" elevation={0} sx={{ borderRadius: 4 }}>
-            <Table>
+          <TableContainer 
+            component={Paper} 
+            className="glass-panel" 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 4, 
+              overflowX: 'auto',
+              width: '100%',
+              display: 'block'
+            }}
+          >
+            <Table sx={{ minWidth: 800 }}>
               <TableHead sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 800, color: '#64748b' }}>TENANT</TableCell>
@@ -196,8 +224,18 @@ const OwnerPaymentHistory = () => {
         {/* Transaction History Section */}
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800, mb: 3, color: '#f1f5f9' }}>Transaction History</Typography>
-          <TableContainer component={Paper} className="glass-panel" elevation={0} sx={{ borderRadius: 4 }}>
-            <Table>
+          <TableContainer 
+            component={Paper} 
+            className="glass-panel" 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 4, 
+              overflowX: 'auto',
+              width: '100%',
+              display: 'block'
+            }}
+          >
+            <Table sx={{ minWidth: 800 }}>
               <TableHead sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 800, color: '#64748b' }}>DATE</TableCell>

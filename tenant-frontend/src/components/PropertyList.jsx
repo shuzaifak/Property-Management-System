@@ -69,6 +69,9 @@ const ResidenceCard = styled(Card)(({ theme }) => ({
 const SectionHeader = styled(Typography)(({ theme }) => ({
   fontWeight: 800,
   fontSize: '2rem',
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.5rem',
+  },
   marginBottom: theme.spacing(3),
   display: 'flex',
   alignItems: 'center',
@@ -174,14 +177,15 @@ const PropertyList = () => {
   }
 
   return (
-    <Container maxWidth="lg">
-      <GradientBackground>
+    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4 }, py: 4 }}>
+      <GradientBackground sx={{ p: { xs: 3, sm: 6 } }}>
         <Typography 
           variant="h3" 
           align="center" 
           sx={{ 
             fontWeight: 700, 
-            letterSpacing: '-0.05em' 
+            letterSpacing: '-0.05em',
+            fontSize: { xs: '1.75rem', sm: '3rem' }
           }}
         >
           Discover Your Next Home
@@ -189,7 +193,7 @@ const PropertyList = () => {
         <Typography 
           variant="subtitle1" 
           align="center" 
-          sx={{ mt: 2, opacity: 0.8 }}
+          sx={{ mt: 2, opacity: 0.8, fontSize: { xs: '0.9rem', sm: '1.1rem' } }}
         >
           Browse through our carefully curated rental listings
         </Typography>
@@ -198,8 +202,8 @@ const PropertyList = () => {
       {/* Current Residence Section */}
       {user?.currentLease && (
         <Box sx={{ mb: 8 }}>
-          <SectionHeader sx={{ color: '#60a5fa', WebkitTextFillColor: 'unset', background: 'unset' }}>
-            <HomeWorkIcon sx={{ fontSize: '2.5rem' }} /> Your Current Residence
+          <SectionHeader sx={{ color: '#60a5fa', WebkitTextFillColor: 'unset', background: 'unset', fontSize: { xs: '1.5rem', sm: '2.5rem' } }}>
+            <HomeWorkIcon sx={{ fontSize: { xs: '1.8rem', sm: '2.5rem' } }} /> Your Current Residence
           </SectionHeader>
           
           <Grid container>
@@ -225,7 +229,12 @@ const PropertyList = () => {
                     <CardContent sx={{ flex: 1, p: { xs: 3, md: 5 }, display: 'flex', flexDirection: 'column' }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                         <Box>
-                          <Typography variant="h3" sx={{ fontWeight: 800, color: '#f8fafc', mb: 1 }}>
+                          <Typography variant="h3" sx={{ 
+                            fontWeight: 800, 
+                            color: '#f8fafc', 
+                            mb: 1,
+                            fontSize: { xs: '1.75rem', sm: '3rem' } 
+                          }}>
                             {property.title}
                           </Typography>
                           <Typography variant="h6" sx={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -426,7 +435,7 @@ const PropertyList = () => {
             </Typography>
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ position: 'relative', width: '100%', height: '500px' }}>
+            <Box sx={{ position: 'relative', width: '100%', height: { xs: '300px', sm: '500px' } }}>
               {selectedProperty.images.length > 1 && (
                 <Box 
                   sx={{ 

@@ -105,17 +105,21 @@ const AddEditProperty = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 800, margin: 'auto', py: 2 }}>
-      <Box mb={4}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+    <Box sx={{ maxWidth: 800, margin: 'auto', py: 2, px: { xs: 1, sm: 0 } }}>
+      <Box sx={{ mb: 4, px: { xs: 1, sm: 0 } }}>
+        <Typography variant="h4" sx={{ 
+          fontWeight: 800, 
+          mb: 1,
+          fontSize: { xs: '1.75rem', sm: '2.125rem' } 
+        }}>
           {propertyId ? 'Edit Property' : 'Add New Property'}
         </Typography>
-        <Typography variant="body1" color="textSecondary">
+        <Typography variant="body1" color="textSecondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
           Fill in the details below to {propertyId ? 'update your' : 'list a new'} property.
         </Typography>
       </Box>
 
-      <Paper className="glass-panel" sx={{ p: 4, borderRadius: 4, border: 'none' }}>
+      <Paper className="glass-panel" sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 4, border: 'none' }}>
         {submitError && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{submitError}</Alert>}
 
         <Grid container spacing={3}>

@@ -91,20 +91,42 @@ const ManageTenantsPage = () => {
 
   return (
     <MainLayout>
-      <Box sx={{ p: 1 }}>
-        <Box mb={4}>
-          <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Tenant Management
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#94a3b8' }}>Assign tenants to your properties and manage their active leases.</Typography>
+      <Box sx={{ px: { xs: 1, sm: 0 } }}>
+        <Box sx={{ 
+          mb: 4,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 2
+        }}>
+          <Box>
+            <Typography variant="h4" sx={{ 
+              fontWeight: 900, 
+              mb: 1, 
+              background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent',
+              fontSize: { xs: '1.75rem', sm: '2.125rem' } 
+            }}>
+              Tenant Management
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#94a3b8', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+              Assign tenants to your properties and manage leases.
+            </Typography>
+          </Box>
         </Box>
 
         <Grid container spacing={4}>
           <Grid item xs={12} lg={9}>
             <Card className="glass-card" elevation={0} sx={{ borderRadius: 4 }}>
               <CardContent sx={{ p: 0 }}>
-                <TableContainer>
-                  <Table>
+                <TableContainer sx={{ 
+                  overflowX: 'auto',
+                  width: '100%',
+                  display: 'block'
+                }}>
+                  <Table sx={{ minWidth: 700 }}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
                         <TableCell sx={{ fontWeight: 800, color: '#64748b', py: 2.5 }}>PROPERTY</TableCell>
@@ -192,11 +214,11 @@ const ManageTenantsPage = () => {
                 <Divider sx={{ mb: 2, opacity: 0.1 }} />
                 <Box sx={{ py: 1 }}>
                   <Typography variant="caption" color="textSecondary" display="block">Total Properties</Typography>
-                  <Typography variant="h4" fontWeight={900} color="#f1f5f9">{properties.length}</Typography>
+                  <Typography variant="h4" fontWeight={900} color="#f1f5f9" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>{properties.length}</Typography>
                 </Box>
                 <Box sx={{ py: 1 }}>
                   <Typography variant="caption" color="textSecondary" display="block">Active Tenants</Typography>
-                  <Typography variant="h4" fontWeight={900} color="#3b82f6">{properties.filter(p => !p.available).length}</Typography>
+                  <Typography variant="h4" fontWeight={900} color="#3b82f6" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>{properties.filter(p => !p.available).length}</Typography>
                 </Box>
                 <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(59, 130, 246, 0.1)', borderRadius: 2, border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                   <Typography variant="body2" sx={{ color: '#93c5fd', lineHeight: 1.5 }}>

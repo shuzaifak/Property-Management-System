@@ -79,14 +79,25 @@ const Properties = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 1, sm: 0 } }}>
       {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={4}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: 2, 
+        mb: 4 
+      }}>
         <Box sx={{ p: 1.5, borderRadius: 3, background: 'rgba(37, 99, 235, 0.12)', border: '1px solid rgba(37,99,235,0.3)' }}>
-          <HomeWorkIcon sx={{ color: '#3b82f6', fontSize: 28 }} />
+          <HomeWorkIcon sx={{ color: '#3b82f6', fontSize: { xs: 24, sm: 28 } }} />
         </Box>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800 }}>Property Oversight</Typography>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 800, 
+            fontSize: { xs: '1.5rem', sm: '2.125rem' } 
+          }}>
+            Property Oversight
+          </Typography>
           <Typography variant="body2" color="textSecondary">{filtered.length} total properties monitored</Typography>
         </Box>
       </Box>

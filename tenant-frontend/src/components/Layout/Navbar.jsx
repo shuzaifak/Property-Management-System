@@ -1,39 +1,25 @@
 import React, { useContext, useState } from 'react';
 import {
   AppBar, Toolbar, Typography, Box, Avatar, IconButton,
-  Menu, MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, Button
+  Menu, MenuItem
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../contexts/AuthContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import api from '../../services/api';
 
 const Navbar = ({ handleDrawerToggle }) => {
-  const { user, logout, isAuthenticated, updateUser } = useContext(AuthContext);
+  const { user, logout, isAuthenticated } = useContext(AuthContext);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const navigate = useNavigate();
 
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
   const handleLogout = () => { logout(); window.location.href = '/login'; };
-  const handleOpenDialog = () => { setOpenDialog(true); handleMenuClose(); };
-  const handleCloseDialog = () => { setOpenDialog(false); setSelectedFile(null); };
-  const handleFileChange = (e) => setSelectedFile(e.target.files[0]);
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-    const formData = new FormData();
-    formData.append('avatar', selectedFile);
-    try {
-      const res = await api.post('/users/upload-avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const updatedUser = res.data.user;
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      updateUser(updatedUser);
-      handleCloseDialog();
-    } catch (err) {
-      console.error('Upload failed', err.response?.data?.message || err.message);
-    }
+  
+  const handleViewProfile = () => {
+    navigate('/dashboard/profile');
+    handleMenuClose();
   };
 
   return (
@@ -69,7 +55,13 @@ const Navbar = ({ handleDrawerToggle }) => {
         </Typography>
         {isAuthenticated && user && (
           <Box display="flex" alignItems="center" gap={2}>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>{user.name}</Typography>
+            <Typography variant="body1" sx={{ 
+              color: 'rgba(255,255,255,0.7)', 
+              fontSize: '0.9rem',
+              display: { xs: 'none', sm: 'block' }
+            }}>
+              {user.name}
+            </Typography>
             <IconButton onClick={handleMenuOpen}>
               <Avatar alt="Tenant" src={user.avatar} sx={{ width: 36, height: 36, bgcolor: '#2563eb', boxShadow: '0 0 0 2px rgba(59,130,246,0.5)' }}>
                 {!user.avatar && user.name?.[0]?.toUpperCase()}
@@ -81,16 +73,9 @@ const Navbar = ({ handleDrawerToggle }) => {
           </Box>
         )}
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
-          <MenuItem onClick={handleOpenDialog}>Change Profile Picture</MenuItem>
+          <MenuItem onClick={handleViewProfile}>My Profile</MenuItem>
+          <MenuItem onClick={handleLogout}>Logout</MenuItem>
         </Menu>
-        <Dialog open={openDialog} onClose={handleCloseDialog}>
-          <DialogTitle sx={{ fontWeight: 700 }}>Change Profile Picture</DialogTitle>
-          <DialogContent><input type="file" accept="image/*" onChange={handleFileChange} /></DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={handleCloseDialog} sx={{ color: 'text.secondary' }}>Cancel</Button>
-            <Button onClick={handleUpload} variant="contained" color="primary">Upload</Button>
-          </DialogActions>
-        </Dialog>
       </Toolbar>
     </AppBar>
   );

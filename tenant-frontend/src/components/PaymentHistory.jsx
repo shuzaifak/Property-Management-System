@@ -42,7 +42,12 @@ const SummaryBox = ({ title, value, icon: Icon, color, subtext }) => (
           <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
             {title}
           </Typography>
-          <Typography variant="h4" sx={{ fontWeight: 800, mt: 1, color: '#f1f5f9' }}>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 800, 
+            mt: 1, 
+            color: '#f1f5f9',
+            fontSize: { xs: '1.5rem', sm: '2.125rem' } 
+          }}>
             {value}
           </Typography>
           {subtext && (
@@ -130,18 +135,34 @@ const PaymentHistoryPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, pb: 8 }}>
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Payment History
-        </Typography>
-        <Typography variant="body1" sx={{ color: '#94a3b8' }}>
-          Track your transactions and outstanding balance.
-        </Typography>
+    <Container maxWidth="lg" sx={{ mt: 2, pb: 8, px: { xs: 1.5, sm: 3 } }}>
+      <Box sx={{ 
+        mb: 6, 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' }, 
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        justifyContent: 'space-between',
+        gap: 2 
+      }}>
+        <Box>
+          <Typography variant="h3" sx={{ 
+            fontWeight: 900, 
+            mb: 1, 
+            background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', 
+            WebkitBackgroundClip: 'text', 
+            WebkitTextFillColor: 'transparent',
+            fontSize: { xs: '1.75rem', sm: '3rem' }
+          }}>
+            Payment History
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#94a3b8', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+            Track your transactions and outstanding balance.
+          </Typography>
+        </Box>
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 6 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <SummaryBox 
             title="Total Paid" 
             value={formatCurrency(balanceData?.balance)} 
@@ -150,7 +171,7 @@ const PaymentHistoryPage = () => {
             subtext={`${payments.filter(p => p.status === 'completed').length} completed transactions`}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <SummaryBox 
             title="Outstanding" 
             value={formatCurrency(balanceData?.pendingRent)} 
@@ -159,7 +180,7 @@ const PaymentHistoryPage = () => {
             subtext="Unpaid dues"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <SummaryBox 
             title="Monthly Rent" 
             value={formatCurrency(balanceData?.monthlyRent)} 
@@ -167,7 +188,7 @@ const PaymentHistoryPage = () => {
             color="#3b82f6"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <SummaryBox 
             title="Total Due" 
             value={formatCurrency(balanceData?.totalDue)} 
@@ -179,8 +200,15 @@ const PaymentHistoryPage = () => {
 
       <GlassCard elevation={0}>
         <CardContent sx={{ p: 0 }}>
-          <TableContainer component={Box}>
-            <Table>
+          <TableContainer 
+            component={Box} 
+            sx={{ 
+              overflowX: 'auto',
+              width: '100%',
+              display: 'block'
+            }}
+          >
+            <Table sx={{ minWidth: 650 }}>
               <TableHead sx={{ bgcolor: 'rgba(255,255,255,0.03)' }}>
                 <TableRow>
                   {['Date', 'Amount', 'Method', 'Status'].map((h) => (

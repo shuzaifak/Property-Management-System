@@ -20,6 +20,10 @@ import { toast } from 'react-toastify';
 const StyledPaper = styled(Paper)(({ theme }) => ({
   borderRadius: 24,
   padding: theme.spacing(4),
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2.5),
+    borderRadius: 20,
+  },
   background: 'rgba(15, 23, 42, 0.6)',
   backdropFilter: 'blur(20px)',
   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -182,7 +186,12 @@ const PaymentForm = () => {
           <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
             Total Outstanding Balance
           </Typography>
-          <Typography variant="h2" sx={{ fontWeight: 900, color: '#f1f5f9', mt: 1 }}>
+          <Typography variant="h2" sx={{ 
+            fontWeight: 900, 
+            color: '#f1f5f9', 
+            mt: 1,
+            fontSize: { xs: '2.5rem', sm: '3.75rem' } 
+          }}>
             ${balanceData?.pendingRent?.toFixed(2)}
           </Typography>
           {isUpToDate && (

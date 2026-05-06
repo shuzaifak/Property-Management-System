@@ -127,7 +127,11 @@ const LeaseAgreementsPage = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#f1f5f9' }}>
+      <Typography variant="h4" gutterBottom sx={{ 
+        fontWeight: 700, 
+        color: '#f1f5f9',
+        fontSize: { xs: '1.75rem', sm: '2.125rem' } 
+      }}>
         Current Lease Agreement
       </Typography>
 

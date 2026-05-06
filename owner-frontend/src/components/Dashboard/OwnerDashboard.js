@@ -87,8 +87,8 @@ const OwnerDashboard = () => {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <Box mb={4}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Dashboard Overview</Typography>
+      <Box mb={4} sx={{ px: { xs: 1, sm: 0 } }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>Dashboard Overview</Typography>
         <Typography variant="body1" color="textSecondary">Welcome back to your property management console.</Typography>
       </Box>
 

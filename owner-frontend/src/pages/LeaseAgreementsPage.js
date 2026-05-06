@@ -93,14 +93,27 @@ const LeaseAgreementsPage = () => {
 
   return (
     <MainLayout>
-      <Box sx={{ p: { xs: 2, md: 4 } }}>
+      <Box sx={{ p: { xs: 2, sm: 4 } }}>
         {/* Header Section */}
-        <Box mb={4} display="flex" justifyContent="space-between" alignItems="flex-end">
+        <Box mb={4} sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'flex-end' },
+          gap: 2
+        }}>
           <Box>
-            <Typography variant="h3" sx={{ fontWeight: 900, mb: 1, background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <Typography variant="h3" sx={{ 
+              fontWeight: 900, 
+              mb: 1, 
+              background: 'linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%)', 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent',
+              fontSize: { xs: '1.75rem', sm: '3rem' }
+            }}>
               Lease Repository
             </Typography>
-            <Typography variant="body1" sx={{ color: '#94a3b8' }}>Access and manage all formal tenant-landlord agreements.</Typography>
+            <Typography variant="body1" sx={{ color: '#94a3b8', fontSize: { xs: '0.9rem', sm: '1rem' } }}>Access and manage all formal tenant-landlord agreements.</Typography>
           </Box>
           <Box className="glass-card" sx={{ p: 1, px: 2, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
             <VerifiedIcon sx={{ color: '#10b981' }} />

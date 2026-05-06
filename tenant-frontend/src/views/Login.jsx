@@ -46,7 +46,13 @@ const Login = () => {
           {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
           <TextField label="Email Address" variant="outlined" fullWidth sx={{ mb: 3 }} value={email} onChange={e => setEmail(e.target.value)} />
-          <TextField label="Password" variant="outlined" type="password" fullWidth sx={{ mb: 4 }} value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+          <TextField label="Password" variant="outlined" type="password" fullWidth sx={{ mb: 1 }} value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+          
+          <Box sx={{ textAlign: 'right', mb: 3 }}>
+            <Button variant="text" size="small" onClick={() => navigate('/forgot-password')} sx={{ color: '#94a3b8', textTransform: 'none' }}>
+              Forgot Password?
+            </Button>
+          </Box>
 
           <Button variant="contained" color="primary" fullWidth onClick={handleLogin}
             sx={{ mb: 2, py: 1.5, fontSize: '1rem', background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)' }}>

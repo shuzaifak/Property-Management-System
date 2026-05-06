@@ -13,7 +13,7 @@ const MainLayout = ({ children }) => {
   return (
     <Box display="flex">
       <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
-      <Box flexGrow={1} sx={{ width: { sm: `calc(100% - 256px)` } }}>
+      <Box flexGrow={1} sx={{ width: { sm: `calc(100% - 256px)` }, maxWidth: '100%', overflow: 'hidden' }}>
         <Topbar handleDrawerToggle={handleDrawerToggle} />
         <Toolbar />
         <Box padding={{ xs: 2, sm: 4 }} sx={{ position: 'relative', zIndex: 1 }}>{children}</Box>

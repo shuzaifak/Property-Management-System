@@ -6,6 +6,8 @@ import PropertiesPage from './pages/PropertiesPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import ResetPassword from './pages/ResetPassword';
 import PaymentsPage from './pages/PaymentsPage';
+import ProfilePage from './pages/ProfilePage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import { AuthContext } from './context/AuthContext';
 
 function App() {
@@ -14,8 +16,10 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<AdminLoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
+      <Route path="/profile" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} />
       <Route path="/users" element={isAuthenticated ? <UsersPage /> : <Navigate to="/login" />} />
       <Route path="/properties" element={isAuthenticated ? <PropertiesPage /> : <Navigate to="/login" />} />
       <Route path="/payments" element={isAuthenticated ? <PaymentsPage /> : <Navigate to="/login" />} />

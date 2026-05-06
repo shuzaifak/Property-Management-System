@@ -8,6 +8,7 @@ import PaymentForm from '../components/PaymentForm';
 import PaymentHistory from '../components/PaymentHistory';
 import NotFound from './NotFound';
 import LeaseAgreementsPage from './LeaseAgreementsPage';
+import Profile from './Profile';
 
 const Dashboard = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -26,6 +27,8 @@ const Dashboard = () => {
           flexGrow: 1,
           p: { xs: 2, sm: 4 },
           width: { sm: `calc(100% - 256px)` },
+          maxWidth: '100%',
+          overflowX: 'hidden',
           position: 'relative',
           zIndex: 1,
           minHeight: '100vh',
@@ -37,6 +40,7 @@ const Dashboard = () => {
           <Route path="pay-rent" element={<PaymentForm />} />
           <Route path="payment-history" element={<PaymentHistory />} />
           <Route path="lease-agreements" element={<LeaseAgreementsPage />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Box>
