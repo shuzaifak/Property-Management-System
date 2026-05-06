@@ -2,6 +2,7 @@ const User = require('../models/User');
 const { generateToken } = require('../utils/tokenService');
 const { sendEmail } = require('../utils/emailService');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 exports.register = async (req, res) => {
   try {
