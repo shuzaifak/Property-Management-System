@@ -5,9 +5,10 @@ import {
 } from '@mui/material';
 import { AuthContext } from '../../contexts/AuthContext';
 import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
 import api from '../../services/api';
 
-const Navbar = () => {
+const Navbar = ({ handleDrawerToggle }) => {
   const { user, logout, isAuthenticated, updateUser } = useContext(AuthContext);
   const [anchorEl, setAnchorEl] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -48,11 +49,21 @@ const Navbar = () => {
       }}
     >
       <Toolbar>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, display: { sm: 'none' }, color: '#3b82f6' }}
+        >
+          <MenuIcon />
+        </IconButton>
         <Typography variant="h6" flexGrow={1} sx={{
           fontWeight: 700,
           background: 'linear-gradient(90deg, #3b82f6 30%, #93c5fd 90%)',
           WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
+          WebkitTextFillColor: 'transparent',
+          fontSize: { xs: '1.1rem', sm: '1.25rem' }
         }}>
           Property Sync Tenant
         </Typography>

@@ -9,14 +9,12 @@ import DocumentIcon from '@mui/icons-material/Description';
 
 const drawerWidth = 256;
 
-const SideBar = () => {
+const SideBar = ({ mobileOpen, handleDrawerToggle }) => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
   const hasActiveLease = !!user?.currentLease;
-  console.log('SideBar Debug - User:', user);
-  console.log('SideBar Debug - Has Active Lease:', hasActiveLease);
 
   const menuItems = [
     {
@@ -43,15 +41,8 @@ const SideBar = () => {
     },
   ];
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' }
-      }}
-    >
+  const drawer = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f172a' }}>
       {/* Logo */}
       <Box sx={{ px: 3, py: 3.5 }}>
         <Box display="flex" alignItems="center" gap={1.5}>
@@ -84,7 +75,10 @@ const SideBar = () => {
             return (
               <ListItemButton
                 key={item.text}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  if (handleDrawerToggle) handleDrawerToggle();
+                }}
                 sx={{
                   borderRadius: 2.5, mb: 0.5, px: 2, py: 1.2, position: 'relative',
                   background: isActive ? 'rgba(37, 99, 235, 0.18)' : 'transparent',
@@ -117,7 +111,40 @@ const SideBar = () => {
           <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 600 }}>Active Status</Typography>
         </Box>
       </Box>
-    </Drawer>
+    </Box>
+  );
+
+  return (
+    <Box
+      component="nav"
+      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+    >
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', border: 'none' },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', border: 'none', background: '#0f172a' },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
   );
 };
 

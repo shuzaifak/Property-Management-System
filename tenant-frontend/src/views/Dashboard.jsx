@@ -10,15 +10,22 @@ import NotFound from './NotFound';
 import LeaseAgreementsPage from './LeaseAgreementsPage';
 
 const Dashboard = () => {
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
-      <Navbar />
-      <SideBar />
+      <Navbar handleDrawerToggle={handleDrawerToggle} />
+      <SideBar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 4,
+          p: { xs: 2, sm: 4 },
+          width: { sm: `calc(100% - 256px)` },
           position: 'relative',
           zIndex: 1,
           minHeight: '100vh',

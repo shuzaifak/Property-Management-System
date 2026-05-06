@@ -5,15 +5,12 @@ import sidebarItems from './sidebarItems';
 
 const drawerWidth = 256;
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{ width: drawerWidth, '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' } }}
-    >
+  const drawer = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f172a' }}>
       {/* Logo */}
       <Box sx={{ px: 3, py: 3.5 }}>
         <Box display="flex" alignItems="center" gap={1.5}>
@@ -45,7 +42,10 @@ const Sidebar = () => {
             return (
               <ListItemButton
                 key={item.name}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  if (handleDrawerToggle) handleDrawerToggle();
+                }}
                 sx={{
                   borderRadius: 2.5, mb: 0.5, px: 2, py: 1.2, position: 'relative',
                   background: isActive ? 'rgba(37, 99, 235, 0.18)' : 'transparent',
@@ -78,7 +78,40 @@ const Sidebar = () => {
           <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 600 }}>Full Access Mode</Typography>
         </Box>
       </Box>
-    </Drawer>
+    </Box>
+  );
+
+  return (
+    <Box
+      component="nav"
+      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+    >
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', border: 'none' },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', border: 'none', background: '#0f172a' },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
   );
 };
 

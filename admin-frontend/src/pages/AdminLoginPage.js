@@ -46,7 +46,7 @@ const AdminLoginPage = () => {
 
   return (
     <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-      <Card className="glass-card" sx={{ width: 420, p: 2 }}>
+      <Card className="glass-card" sx={{ width: '100%', maxWidth: 420, mx: 2, p: 2 }}>
         <CardContent>
           {/* Logo */}
           <Box display="flex" flexDirection="column" alignItems="center" mb={4}>
