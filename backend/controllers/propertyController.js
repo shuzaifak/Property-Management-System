@@ -14,13 +14,13 @@ exports.createProperty = async (req, res) => {
     const { title, address, price, description } = req.body;
     const images = req.files ? req.files.map(file => `/uploads/properties/${file.filename}`) : [];
 
-    const property = new Property({ 
-      ownerId: req.user._id, 
-      title, 
-      address, 
-      price: Number(price), 
+    const property = new Property({
+      ownerId: req.user._id,
+      title,
+      address,
+      price: Number(price),
       description,
-      images 
+      images
     });
     await property.save();
 
@@ -28,10 +28,10 @@ exports.createProperty = async (req, res) => {
     const tenants = await User.find({ role: 'tenant' });
 
     // Send email to all tenants about the new property
-    const emailPromises = tenants.map(tenant => 
+    const emailPromises = tenants.map(tenant =>
       sendEmail(
-        tenant.email, 
-        'New Property Added to Property Sync', 
+        tenant.email,
+        'New Property Added to Property Sync',
         `
           <h3>New Property Listing</h3>
           <p>Dear ${tenant.name},</p>
@@ -68,32 +68,40 @@ exports.addTenantToProperty = async (req, res) => {
     const { propertyId, email } = req.body;
 
     // Verify if property exists and belongs to the current owner
-    const property = await Property.findOne({ 
-      _id: propertyId, 
-      ownerId: req.user._id 
+    const property = await Property.findOne({
+      _id: propertyId,
+      ownerId: req.user._id
     });
 
     if (!property) {
       return res.status(404).json({ message: 'Property not found or you are not authorized to modify it.' });
     }
 
-    // Check if tenant exists or create a new one
-    let tenant = await User.findOne({ email, role: 'tenant' });
+    // Check if user exists by email
+    let tenant = await User.findOne({ email });
 
-    if (!tenant) {
+    if (tenant) {
+      // If user exists but is not a tenant, we cannot assign them as one
+      if (tenant.role !== 'tenant') {
+        return res.status(400).json({
+          message: 'This email is already registered with a different role (Owner/Admin).'
+        });
+      }
+    } else {
+      // Create new tenant if they don't exist
       tenant = new User({
         email,
         role: 'tenant',
-        name: email.split('@')[0], 
+        name: email.split('@')[0],
         password: crypto.randomBytes(20).toString('hex')
       });
       await tenant.save();
     }
 
     // Ensure the tenant doesn't already have an active lease
-    const existingTenantLease = await Lease.findOne({ 
-      tenant: tenant._id, 
-      status: 'active' 
+    const existingTenantLease = await Lease.findOne({
+      tenant: tenant._id,
+      status: 'active'
     });
 
     if (existingTenantLease) {
@@ -101,9 +109,9 @@ exports.addTenantToProperty = async (req, res) => {
     }
 
     // Check for active lease on the property
-    const existingLease = await Lease.findOne({ 
-      property: propertyId, 
-      status: 'active' 
+    const existingLease = await Lease.findOne({
+      property: propertyId,
+      status: 'active'
     });
 
     if (existingLease) {
@@ -133,8 +141,8 @@ exports.addTenantToProperty = async (req, res) => {
     await lease.populate('tenant', 'name email');
 
     await sendEmail(
-      tenant.email, 
-      'New Property Lease Assigned', 
+      tenant.email,
+      'New Property Lease Assigned',
       `
         <h3>Welcome to Your New Home!</h3>
         <p>Dear ${tenant.name},</p>
@@ -156,9 +164,9 @@ exports.addTenantToProperty = async (req, res) => {
         <hr />
         <p><small>Emergency repairs should be reported immediately through the portal maintenance system.</small></p>
       `
-  );
+    );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Tenant added successfully.',
       tenant: { id: tenant._id, name: tenant.name, email: tenant.email },
       lease
@@ -183,7 +191,7 @@ exports.getOwnerProperties = async (req, res) => {
 
       // Convert to plain object to add custom fields
       const propertyObj = property.toObject();
-      
+
       // If there is an active lease, the property is occupied
       propertyObj.available = !activeLease;
       propertyObj.activeLease = activeLease;
@@ -200,7 +208,7 @@ exports.getOwnerProperties = async (req, res) => {
 exports.getProperties = async (req, res) => {
   try {
     const { id } = req.query;
-    
+
     let properties;
     if (id) {
       properties = await Property.find({ _id: id }).populate('ownerId', 'name email');
@@ -220,7 +228,7 @@ exports.getProperties = async (req, res) => {
       pObj.activeLease = activeLease;
       return pObj;
     }));
-    
+
     res.json(enrichedProperties);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -234,21 +242,21 @@ exports.updateProperty = async (req, res) => {
 
     // Find existing property
     const existingProperty = await Property.findOne({ _id: id, ownerId: req.user._id });
-    
+
     if (!existingProperty) {
       return res.status(404).json({ message: 'Property not found or not authorized.' });
     }
 
     // Handle image uploads
-    const newImages = req.files 
-      ? req.files.map(file => `/uploads/properties/${file.filename}`) 
+    const newImages = req.files
+      ? req.files.map(file => `/uploads/properties/${file.filename}`)
       : [];
 
     // Remove old images if new images are uploaded
     if (newImages.length > 0) {
       // Delete old image files
       existingProperty.images.forEach(imagePath => {
-        const fullPath = path.join(__dirname, '../public', imagePath);
+        const fullPath = path.join(__dirname, '..', 'public', imagePath);
         if (fs.existsSync(fullPath)) {
           fs.unlinkSync(fullPath);
         }
@@ -296,19 +304,19 @@ exports.deleteProperty = async (req, res) => {
 
     // Prepare file deletions (async)
     const fileDeletions = property.images.map(imagePath => {
-      const fullPath = path.join(__dirname, '../public', imagePath);
-      return fs.promises.unlink(fullPath).catch(() => {}); // Ignore errors if file not found
+      const fullPath = path.join(__dirname, '..', 'public', imagePath);
+      return fs.promises.unlink(fullPath).catch(() => { }); // Ignore errors if file not found
     });
 
     // Run DB updates in parallel where possible within the transaction
     const dbUpdates = [
       // Terminate active leases
       Lease.updateMany(
-        { property: id, status: 'active' }, 
-        { 
-          status: 'terminated', 
-          endDate: new Date(), 
-          terminationReason: req.user.role === 'admin' ? 'Property deleted by Admin' : 'Property deleted by owner' 
+        { property: id, status: 'active' },
+        {
+          status: 'terminated',
+          endDate: new Date(),
+          terminationReason: req.user.role === 'admin' ? 'Property deleted by Admin' : 'Property deleted by owner'
         }
       ).session(session),
 
@@ -327,7 +335,7 @@ exports.deleteProperty = async (req, res) => {
 
     // Wait for all DB operations and file deletions
     await Promise.all([...dbUpdates, ...fileDeletions]);
-    
+
     await session.commitTransaction();
     res.json({ message: 'Property deleted successfully.' });
   } catch (err) {
@@ -345,7 +353,7 @@ exports.getOwnerPaymentHistory = async (req, res) => {
     const propertyIds = properties.map(prop => prop._id);
 
     // Find all active leases for these properties to calculate dues
-    const activeLeases = await Lease.find({ 
+    const activeLeases = await Lease.find({
       property: { $in: propertyIds },
       status: 'active'
     }).populate('tenant', 'name email').populate('property', 'title address');
@@ -365,17 +373,17 @@ exports.getOwnerPaymentHistory = async (req, res) => {
 
     // Calculate dues for each active lease
     const dues = await Promise.all(activeLeases.map(async (lease) => {
-      const leasePayments = await Payment.find({ 
-        lease: lease._id, 
-        status: 'completed' 
+      const leasePayments = await Payment.find({
+        lease: lease._id,
+        status: 'completed'
       });
-      
+
       const totalPaid = leasePayments.reduce((sum, p) => sum + p.amount, 0);
 
       // Calculate total expected rent since lease started
       const startDate = new Date(lease.startDate);
       const today = new Date();
-      
+
       const yearsDiff = today.getFullYear() - startDate.getFullYear();
       const monthsDiff = today.getMonth() - startDate.getMonth();
       const totalMonths = (yearsDiff * 12) + monthsDiff + 1; // Including current month

@@ -1,6 +1,6 @@
 const Property = require('../models/Property');
 const Lease = require('../models/Lease');
-const User = require('../models/User'); 
+const User = require('../models/User');
 const Payment = require('../models/Payment');
 const mongoose = require('mongoose');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -12,11 +12,11 @@ exports.getProperties = async (req, res) => {
     if (req.user.currentLease) {
       const lease = await Lease.findById(req.user.currentLease);
       if (lease) {
-        query = { 
+        query = {
           $or: [
-            { available: true }, 
+            { available: true },
             { _id: lease.property }
-          ] 
+          ]
         };
       }
     }
@@ -135,15 +135,11 @@ exports.makePayment = async (req, res) => {
 };
 
 exports.getPaymentHistory = async (req, res) => {
-  console.log('==== Payment History Request ====');
-  console.log('Raw Lease ID:', req.params.leaseId);
-  console.log('Lease ID Type:', typeof req.params.leaseId);
-  
   try {
     // Validate that leaseId is a valid string
     if (!req.params.leaseId || typeof req.params.leaseId !== 'string') {
       console.error('Invalid lease ID');
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Invalid lease ID',
         details: {
           user: req.user ? req.user._id : 'No user found',
@@ -153,11 +149,11 @@ exports.getPaymentHistory = async (req, res) => {
 
     // Trim and validate the lease ID
     const leaseId = req.params.leaseId.trim();
-    
+
     // Check if the lease ID is a valid 24-character hex string
     if (!/^[0-9a-fA-F]{24}$/.test(leaseId)) {
       console.error('Lease ID is not a valid ObjectId');
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Invalid lease ID format',
         receivedId: leaseId
       });
@@ -168,13 +164,13 @@ exports.getPaymentHistory = async (req, res) => {
 
     // Find the lease with detailed logging
     const lease = await Lease.findById(objectId);
-    
+
     if (!lease) {
       console.error('Lease Not Found', {
         leaseId: objectId.toString(),
         searchParams: { _id: objectId }
       });
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: 'Lease not found',
         leaseId: objectId.toString()
       });
@@ -186,7 +182,7 @@ exports.getPaymentHistory = async (req, res) => {
     res.json(payments);
   } catch (err) {
     console.error('Full Payment History Error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error',
       error: err.message,
       stack: err.stack
@@ -196,9 +192,9 @@ exports.getPaymentHistory = async (req, res) => {
 
 exports.getBalance = async (req, res) => {
   try {
-    const currentLease = await Lease.findOne({ 
-      tenant: req.user.id || req.user._id, 
-      status: 'active' 
+    const currentLease = await Lease.findOne({
+      tenant: req.user.id || req.user._id,
+      status: 'active'
     });
 
     if (!currentLease) {
@@ -206,17 +202,17 @@ exports.getBalance = async (req, res) => {
     }
 
     // Get all successful payments
-    const payments = await Payment.find({ 
-      tenant: req.user.id || req.user._id, 
-      status: 'completed' 
+    const payments = await Payment.find({
+      tenant: req.user.id || req.user._id,
+      status: 'completed'
     });
-    
+
     const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
     // Calculate months passed since lease started
     const startDate = new Date(currentLease.startDate);
     const today = new Date();
-    
+
     const yearsDiff = today.getFullYear() - startDate.getFullYear();
     const monthsDiff = today.getMonth() - startDate.getMonth();
     const totalMonths = (yearsDiff * 12) + monthsDiff + 1; // +1 to include the current month
@@ -225,9 +221,9 @@ exports.getBalance = async (req, res) => {
     const totalDue = rentPerMonth * totalMonths;
     const pendingRent = Math.max(0, totalDue - totalPaid);
 
-    res.json({ 
-      balance: totalPaid, 
-      pendingRent, 
+    res.json({
+      balance: totalPaid,
+      pendingRent,
       totalDue,
       monthlyRent: rentPerMonth
     });
@@ -239,9 +235,9 @@ exports.getBalance = async (req, res) => {
 exports.initiateRentPayment = async (req, res) => {
   try {
     const { amount } = req.body;
-    const lease = await Lease.findOne({ 
-      tenant: req.user.id, 
-      status: 'active' 
+    const lease = await Lease.findOne({
+      tenant: req.user.id,
+      status: 'active'
     });
 
     if (!lease) {
@@ -269,8 +265,8 @@ exports.initiateRentPayment = async (req, res) => {
     });
     await pendingPayment.save();
 
-    res.json({ 
-      clientSecret: paymentIntent.client_secret 
+    res.json({
+      clientSecret: paymentIntent.client_secret
     });
   } catch (error) {
     console.error('Payment initiation error:', error);
@@ -281,13 +277,13 @@ exports.initiateRentPayment = async (req, res) => {
 exports.confirmRentPayment = async (req, res) => {
   try {
     const { paymentIntentId } = req.body;
-    
+
     // Retrieve the PaymentIntent to verify details
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
+
     // Find the existing pending payment record
     const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntentId });
-    
+
     if (payment) {
       payment.status = paymentIntent.status === 'succeeded' ? 'completed' : 'failed';
       await payment.save();
@@ -304,9 +300,9 @@ exports.confirmRentPayment = async (req, res) => {
       await newPayment.save();
     }
 
-    res.json({ 
-      message: 'Payment processed', 
-      status: paymentIntent.status 
+    res.json({
+      message: 'Payment processed',
+      status: paymentIntent.status
     });
   } catch (error) {
     console.error('Payment confirmation error:', error);
