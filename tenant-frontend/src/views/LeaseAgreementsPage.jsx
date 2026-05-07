@@ -70,10 +70,7 @@ const LeaseAgreementsPage = () => {
       setDownloadInProgress(true);
       setError(null);
 
-      // First, generate the lease agreement
-      await api.post(`/leases/create-agreement/${lease._id}`);
-      
-      // Then download the generated agreement
+      // Download the agreement directly (backend will generate if missing)
       const response = await api.get(`/leases/download-agreement/${lease._id}`, {
         responseType: 'blob'
       });

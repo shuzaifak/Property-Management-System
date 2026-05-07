@@ -11,7 +11,8 @@ import {
   Paper,
   Stack,
   Divider,
-  Avatar
+  Avatar,
+  CircularProgress
 } from '@mui/material';
 import { 
   Download as DownloadIcon, 
@@ -44,9 +45,11 @@ const LeaseAgreementsPage = () => {
     fetchLeaseAgreements();
   }, []);
 
+  const [downloadingIds, setDownloadingIds] = useState(new Set());
+
   const handleDownloadAgreement = async (leaseId) => {
     try {
-      await api.post(`/leases/create-agreement/${leaseId}`);
+      setDownloadingIds(prev => new Set(prev).add(leaseId));
       const response = await api.get(`/leases/download-agreement/${leaseId}`, {
         responseType: 'blob'
       });
@@ -58,6 +61,12 @@ const LeaseAgreementsPage = () => {
     } catch (error) {
       console.error('Download error:', error);
       alert('Failed to download lease agreement');
+    } finally {
+      setDownloadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(leaseId);
+        return next;
+      });
     }
   };
 
@@ -199,7 +208,8 @@ const LeaseAgreementsPage = () => {
                     <Button
                       fullWidth
                       variant="contained"
-                      startIcon={<DownloadIcon />}
+                      disabled={downloadingIds.has(lease._id)}
+                      startIcon={downloadingIds.has(lease._id) ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
                       onClick={() => handleDownloadAgreement(lease._id)}
                       sx={{
                         mt: 2,
@@ -215,7 +225,7 @@ const LeaseAgreementsPage = () => {
                         }
                       }}
                     >
-                      Download PDF Agreement
+                      {downloadingIds.has(lease._id) ? 'Generating Document...' : 'Download PDF Agreement'}
                     </Button>
                   </Stack>
                 </CardContent>
